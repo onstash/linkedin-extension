@@ -189,7 +189,7 @@ function stopHighlighting(): { success: boolean; cleaned: number } {
 }
 
 export default defineContentScript({
-  matches: ["*://*.linkedin.com/*"],
+  matches: ["*://*.linkedin.com/feed/*", "*://*.linkedin.com/in/*"],
   main() {
     logger.info("Content script loaded, waiting for activation...");
 
