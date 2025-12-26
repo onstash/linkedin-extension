@@ -188,6 +188,21 @@ function stopHighlighting(): { success: boolean; cleaned: number } {
   return { success: true, cleaned: highlightedElements.length };
 }
 
+function trackProfile() {
+  const fullName = document.querySelector<HTMLElement>("a > h1");
+  if (!fullName) {
+    return { success: false, issues: [{ message: "Full name not found" }] };
+  }
+  const profileLink = window.location.href;
+  return {
+    success: true,
+    data: {
+      fullName: fullName.innerText,
+      profileLink,
+    },
+  };
+}
+
 export default defineContentScript({
   matches: ["*://*.linkedin.com/feed/*", "*://*.linkedin.com/in/*"],
   main() {
@@ -198,16 +213,21 @@ export default defineContentScript({
       logger.debug("Received message:", message);
 
       switch (message.action) {
-        case "start":
+        case "degree_highlight_start":
           const startResult = startHighlighting();
           sendResponse(startResult); // ✅ Send response
           break;
-        case "stop":
+        case "degree_highlight_stop":
           const stopResult = stopHighlighting();
           sendResponse(stopResult); // ✅ Send response
           break;
-        case "status":
+        case "degree_highlight_status":
           sendResponse({ isActive });
+          break;
+        case "track_profile_new_connection":
+        case "track_profile_dtm":
+          const trackProfileResult = trackProfile();
+          sendResponse({ trackProfileResult });
           break;
         default:
           sendResponse({ success: false, error: "Invalid action" });

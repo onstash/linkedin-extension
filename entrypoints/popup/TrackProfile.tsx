@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,36 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Play, Square, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
-export function DegreeHighlighter() {
-  const [isActive, setIsActive] = useState(false);
+export function TrackProfile() {
   const [status, setStatus] = useState<string>("Ready");
   const [error, setError] = useState<Error | null>(null);
 
-  // Check if we're on LinkedIn and get current status
-  useEffect(() => {
-    async function checkStatus() {
-      try {
-        const [tab] = await browser.tabs.query({
-          active: true,
-          currentWindow: true,
-        });
-
-        const response = await browser.tabs.sendMessage(tab.id!, {
-          action: "degree_highlight_status",
-        });
-        setIsActive(response?.isActive ?? false);
-        setStatus(response?.isActive ? "Highlighting active" : "Ready");
-      } catch {
-        setStatus("Ready");
-      }
-    }
-
-    checkStatus();
-  }, []);
-
-  const handleToggle = async () => {
+  const handleClick = async (actionType: "new_connection" | "dtm") => {
     try {
       const [tab] = await browser.tabs.query({
         active: true,
@@ -49,17 +26,34 @@ export function DegreeHighlighter() {
       }
 
       setError(null);
-      const action = isActive
-        ? "degree_highlight_stop"
-        : "degree_highlight_start";
-      const response = await browser.tabs.sendMessage(tab.id, { action });
+      const action = `track_profile_${actionType}`;
+      const response = (await browser.tabs.sendMessage(tab.id, { action })) as {
+        success?: boolean;
+        trackProfileResult:
+          | {
+              success: true;
+              data: {
+                fullName: string;
+                profileLink: string;
+              };
+            }
+          | {
+              success: false;
+              issues: {
+                message: string;
+              }[];
+            };
+      };
 
       if (response?.success) {
-        setIsActive(!isActive);
-        if (action === "degree_highlight_start") {
-          setStatus(`Highlighted ${response.count} connections`);
+        if (response?.trackProfileResult?.success) {
+          setStatus(`Profile tracked successfully - ${actionType}`);
+          window.open(
+            `https://app.youform.com/forms/u5msmgsv?fullname=${response?.trackProfileResult?.data?.fullName}&profilelink=${response?.trackProfileResult?.data?.profileLink}&action=${actionType === "new_connection" ? "Add%20connection" : "DTM"}`,
+            "_blank"
+          );
         } else {
-          setStatus(`Cleaned up ${response.cleaned} highlights`);
+          setStatus(`Profile tracked successfully - ${actionType}`);
         }
       } else {
         setStatus("Error communicating with page");
@@ -80,25 +74,26 @@ export function DegreeHighlighter() {
           LinkedIn++
         </CardTitle>
         <CardDescription>
-          1st & 2nd Degree Connection Highlighter
+          Track Profile: new connections, DTM, etc
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
-          onClick={handleToggle}
-          variant={isActive ? "destructive" : "default"}
+          onClick={(e) => handleClick("new_connection")}
+          variant="default"
           className="w-full"
           size="lg"
         >
-          {isActive ? (
-            <>
-              <Square className="mr-2 h-4 w-4" /> Stop Highlighting
-            </>
-          ) : (
-            <>
-              <Play className="mr-2 h-4 w-4" /> Start Highlighting
-            </>
-          )}
+          Track Profile (new connection)
+        </Button>
+
+        <Button
+          onClick={(e) => handleClick("dtm")}
+          variant="default"
+          className="w-full"
+          size="lg"
+        >
+          Track Profile (DTM)
         </Button>
 
         <div className="flex items-center gap-2 text-sm">
