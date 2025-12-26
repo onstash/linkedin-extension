@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.5
+
+### Patch Changes
+
+- ad9c9b3: feat: add shadcn ui components with tailwind v4
+
 ## 0.0.4
 
 ### Patch Changes
