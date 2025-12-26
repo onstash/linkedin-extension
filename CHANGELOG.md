@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.4
+
+### Patch Changes
+
+- 6557f79: feat: add README.md
+
 ## 0.0.3
 
 ### Patch Changes
