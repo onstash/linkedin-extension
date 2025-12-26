@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.3
+
+### Patch Changes
+
+- ff91f42: feat: add linkedin connection highlighter with popup toggle
+
 ## 0.0.2
 
 ### Patch Changes
