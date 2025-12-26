@@ -19,7 +19,7 @@ const CONFIG = {
       PARENT_LEVELS: 4,
       HIGHLIGHT_STYLE: {
         border: "2px solid yellow",
-        backgroundColor: "rgba(0, 255, 0, 0.1)",
+        backgroundColor: "rgba(255, 255, 0, 0.1)",
       },
     },
   },

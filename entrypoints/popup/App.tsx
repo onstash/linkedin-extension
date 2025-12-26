@@ -5,7 +5,6 @@ function App() {
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<string>("Ready");
   const [error, setError] = useState<Error | null>(null);
-  const [isOnLinkedIn, setIsOnLinkedIn] = useState(true);
 
   // Check if we're on LinkedIn and get current status
   useEffect(() => {
@@ -15,12 +14,7 @@ function App() {
           active: true,
           currentWindow: true,
         });
-
-        if (!tab?.url?.includes("linkedin.com")) {
-          setIsOnLinkedIn(false);
-          setStatus("Navigate to LinkedIn first");
-          return;
-        }
+        console.log("useEffect -> checkStatus -> tab", tab);
 
         const response = await browser.tabs.sendMessage(tab.id!, {
           action: "status",
@@ -58,6 +52,9 @@ function App() {
         } else {
           setStatus(`Cleaned up ${response.cleaned} highlights`);
         }
+      } else {
+        setStatus("Error communicating with page");
+        setError(new Error("Error communicating with page"));
       }
     } catch (err: unknown) {
       const _error = err as Error;
@@ -74,7 +71,6 @@ function App() {
 
       <button
         onClick={handleToggle}
-        disabled={!isOnLinkedIn}
         className={`toggle-button ${isActive ? "active" : ""}`}
       >
         {isActive ? "Stop Highlighting" : "Start Highlighting"}
@@ -84,13 +80,6 @@ function App() {
       {error && <p className="error">{error.name}</p>}
       {error && <p className="error">{error.message}</p>}
       {error && <p className="error">{error.stack}</p>}
-
-      {!isOnLinkedIn && (
-        <p className="hint">
-          Open LinkedIn and click the reactions on a post to see 2nd degree
-          connections highlighted.
-        </p>
-      )}
     </div>
   );
 }
