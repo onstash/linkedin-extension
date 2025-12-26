@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.7
+
+### Patch Changes
+
+- a79e81f: fix: response from content.ts
+
 ## 0.0.6
 
 ### Patch Changes
