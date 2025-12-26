@@ -28,8 +28,8 @@ export function TrackProfile() {
       setError(null);
       const action = `track_profile_${actionType}`;
       const response = (await browser.tabs.sendMessage(tab.id, { action })) as {
-        success?: boolean;
-        trackProfileResult:
+        success: boolean;
+        data:
           | {
               success: true;
               data: {
@@ -46,10 +46,10 @@ export function TrackProfile() {
       };
 
       if (response?.success) {
-        if (response?.trackProfileResult?.success) {
+        if (response?.data?.success) {
           setStatus(`Profile tracked successfully - ${actionType}`);
           window.open(
-            `https://app.youform.com/forms/u5msmgsv?fullname=${response?.trackProfileResult?.data?.fullName}&profilelink=${response?.trackProfileResult?.data?.profileLink}&action=${actionType === "new_connection" ? "Add%20connection" : "DTM"}`,
+            `https://app.youform.com/forms/u5msmgsv?fullname=${response?.data?.data?.fullName}&profilelink=${response?.data?.data?.profileLink}&action=${actionType === "new_connection" ? "Add%20connection" : "DTM"}`,
             "_blank"
           );
         } else {

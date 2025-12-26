@@ -227,7 +227,7 @@ export default defineContentScript({
         case "track_profile_new_connection":
         case "track_profile_dtm":
           const trackProfileResult = trackProfile();
-          sendResponse({ trackProfileResult });
+          sendResponse({ success: true, data: trackProfileResult });
           break;
         default:
           sendResponse({ success: false, error: "Invalid action" });
