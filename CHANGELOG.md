@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.6
+
+### Patch Changes
+
+- 89f7b17: feat: add track profile feature for new connections and DTM
+
 ## 0.0.5
 
 ### Patch Changes
