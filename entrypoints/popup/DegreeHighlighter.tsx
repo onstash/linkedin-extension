@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Play, Square, AlertCircle, CheckCircle2 } from "lucide-react";
+  Play,
+  Square,
+  AlertCircle,
+  CheckCircle2,
+  Sparkles,
+} from "lucide-react";
 import { useExtensionStore } from "@/lib/store";
 
 export function DegreeHighlighter() {
@@ -27,12 +27,10 @@ export function DegreeHighlighter() {
   return (
     <Card className="w-[300px] border-0 shadow-none">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-          LinkedIn++
-        </CardTitle>
-        <CardDescription>
+        <CardTitle className="text-sm font-medium flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+          <Sparkles className="h-4 w-4 text-purple-500" />
           1st & 2nd Degree Connection Highlighter
-        </CardDescription>
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
