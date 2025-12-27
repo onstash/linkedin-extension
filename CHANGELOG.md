@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.8
+
+### Patch Changes
+
+- 425ba72: feat: move state to zustand store
+
 ## 0.0.7
 
 ### Patch Changes
