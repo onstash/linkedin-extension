@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.11
+
+### Patch Changes
+
+- f58a826: feat: add birthday and work anniversary profile tracking
+
 ## 0.0.10
 
 ### Patch Changes
