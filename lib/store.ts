@@ -59,7 +59,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       if (!tab?.id) return;
 
       const response = await browser.tabs.sendMessage(tab.id, {
-        action: "status",
+        action: "degree_highlight_status",
       });
 
       set({
@@ -87,12 +87,14 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       }
 
       set({ highlightError: null });
-      const action = isHighlighting ? "stop" : "start";
+      const action = isHighlighting
+        ? "degree_highlight_stop"
+        : "degree_highlight_start";
       const response = await browser.tabs.sendMessage(tab.id, { action });
 
       if (response?.success) {
         set({ isHighlighting: !isHighlighting });
-        if (action === "start") {
+        if (action === "degree_highlight_start") {
           set({ highlightStatus: `Highlighted ${response.count} connections` });
         } else {
           set({ highlightStatus: `Cleaned up ${response.cleaned} highlights` });
