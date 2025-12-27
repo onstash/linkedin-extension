@@ -274,6 +274,8 @@ export default defineContentScript({
           break;
         case "track_profile_new_connection":
         case "track_profile_dtm":
+        case "track_profile_birthday":
+        case "track_profile_work_anniversary":
           const trackProfileResult = trackProfile();
           sendResponse({ success: true, data: trackProfileResult });
           break;

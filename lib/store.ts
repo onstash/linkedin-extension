@@ -1,6 +1,10 @@
 import { create } from "zustand";
 
-type TrackActionType = "new_connection" | "dtm";
+type TrackActionType =
+  | "new_connection"
+  | "dtm"
+  | "birthday"
+  | "work_anniversary";
 
 interface TrackProfileResult {
   success: boolean;
@@ -36,6 +40,19 @@ interface ExtensionState {
 
   // Track Profile Actions
   trackProfile: (actionType: TrackActionType) => Promise<void>;
+}
+
+function getFormAction(actionType: TrackActionType) {
+  switch (actionType) {
+    case "new_connection":
+      return "Add%20Connection";
+    case "dtm":
+      return "DTM";
+    case "birthday":
+      return "Birthday";
+    case "work_anniversary":
+      return "Work%20Anniversary";
+  }
 }
 
 export const useExtensionStore = create<ExtensionState>((set, get) => ({
@@ -137,8 +154,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       if (response?.success) {
         if (response?.data?.success) {
           set({ trackStatus: `Profile tracked - ${actionType}` });
-          const formAction =
-            actionType === "new_connection" ? "Add%20connection" : "DTM";
+          const formAction = getFormAction(actionType);
           window.open(
             `https://app.youform.com/forms/u5msmgsv?fullname=${response.data.data.fullName}&profilelink=${response.data.data.profileLink}&action=${formAction}`,
             "_blank"

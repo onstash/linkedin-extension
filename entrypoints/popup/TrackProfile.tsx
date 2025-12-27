@@ -33,6 +33,24 @@ export function TrackProfile() {
           Track Profile (DTM)
         </Button>
 
+        <Button
+          onClick={() => trackProfile("birthday")}
+          variant="default"
+          className="w-full"
+          size="lg"
+        >
+          Track Profile (Birthday)
+        </Button>
+
+        <Button
+          onClick={() => trackProfile("work_anniversary")}
+          variant="default"
+          className="w-full"
+          size="lg"
+        >
+          Track Profile (Work Anniversary)
+        </Button>
+
         {trackError && (
           <div className="flex items-center gap-2 text-sm">
             <AlertCircle className="h-4 w-4 text-destructive" />
