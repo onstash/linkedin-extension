@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.9
+
+### Patch Changes
+
+- 9b2ba0b: fix: update store action names to match content script handlers
+
 ## 0.0.8
 
 ### Patch Changes
