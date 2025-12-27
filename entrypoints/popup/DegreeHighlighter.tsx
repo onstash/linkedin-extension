@@ -1,96 +1,45 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Play, Square, AlertCircle, CheckCircle2 } from "lucide-react";
+  Play,
+  Square,
+  AlertCircle,
+  CheckCircle2,
+  Sparkles,
+} from "lucide-react";
+import { useExtensionStore } from "@/lib/store";
 
 export function DegreeHighlighter() {
-  const [isActive, setIsActive] = useState(false);
-  const [status, setStatus] = useState<string>("Ready");
-  const [error, setError] = useState<Error | null>(null);
+  const {
+    isHighlighting,
+    highlightStatus,
+    highlightError,
+    checkHighlightStatus,
+    toggleHighlighting,
+  } = useExtensionStore();
 
-  // Check if we're on LinkedIn and get current status
+  // Check status on mount
   useEffect(() => {
-    async function checkStatus() {
-      try {
-        const [tab] = await browser.tabs.query({
-          active: true,
-          currentWindow: true,
-        });
-
-        const response = await browser.tabs.sendMessage(tab.id!, {
-          action: "degree_highlight_status",
-        });
-        setIsActive(response?.isActive ?? false);
-        setStatus(response?.isActive ? "Highlighting active" : "Ready");
-      } catch {
-        setStatus("Ready");
-      }
-    }
-
-    checkStatus();
+    checkHighlightStatus();
   }, []);
-
-  const handleToggle = async () => {
-    try {
-      const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-
-      if (!tab?.id) {
-        setStatus("No active tab found");
-        return;
-      }
-
-      setError(null);
-      const action = isActive
-        ? "degree_highlight_stop"
-        : "degree_highlight_start";
-      const response = await browser.tabs.sendMessage(tab.id, { action });
-
-      if (response?.success) {
-        setIsActive(!isActive);
-        if (action === "degree_highlight_start") {
-          setStatus(`Highlighted ${response.count} connections`);
-        } else {
-          setStatus(`Cleaned up ${response.cleaned} highlights`);
-        }
-      } else {
-        setStatus("Error communicating with page");
-        setError(new Error("Error communicating with page"));
-      }
-    } catch (err: unknown) {
-      const _error = err as Error;
-      console.error("Error:", _error);
-      setStatus("Error communicating with page");
-      setError(_error);
-    }
-  };
 
   return (
     <Card className="w-[300px] border-0 shadow-none">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-          LinkedIn++
-        </CardTitle>
-        <CardDescription>
+        <CardTitle className="text-sm font-medium flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+          <Sparkles className="h-4 w-4 text-purple-500" />
           1st & 2nd Degree Connection Highlighter
-        </CardDescription>
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
-          onClick={handleToggle}
-          variant={isActive ? "destructive" : "default"}
+          onClick={toggleHighlighting}
+          variant={isHighlighting ? "destructive" : "default"}
           className="w-full"
           size="lg"
         >
-          {isActive ? (
+          {isHighlighting ? (
             <>
               <Square className="mr-2 h-4 w-4" /> Stop Highlighting
             </>
@@ -102,21 +51,23 @@ export function DegreeHighlighter() {
         </Button>
 
         <div className="flex items-center gap-2 text-sm">
-          {error ? (
+          {highlightError ? (
             <AlertCircle className="h-4 w-4 text-destructive" />
           ) : (
             <CheckCircle2 className="h-4 w-4 text-green-500" />
           )}
           <span
-            className={error ? "text-destructive" : "text-muted-foreground"}
+            className={
+              highlightError ? "text-destructive" : "text-muted-foreground"
+            }
           >
-            {status}
+            {highlightStatus}
           </span>
         </div>
 
-        {error && (
+        {highlightError && (
           <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">
-            {error.message}
+            {highlightError.message}
           </p>
         )}
       </CardContent>

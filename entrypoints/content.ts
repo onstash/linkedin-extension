@@ -35,6 +35,8 @@ const logger = {
   error: (...args: unknown[]) => console.error("[LinkedIn++]", ...args),
 };
 
+type OnHighlightCallback = (node: HTMLElement) => void;
+
 // Helper functions
 const utils = {
   isValidElement: (element: Node | null): element is HTMLElement =>
@@ -75,13 +77,20 @@ const utils = {
       return false;
     }
   },
+
+  isAlreadyHighlighted: (element: HTMLElement): boolean => {
+    return element.hasAttribute("data-degree-highlighted");
+  },
 };
 
 let observer: MutationObserver | null = null;
 let isActive = false;
 
 // Main badge handling logic
-function handleDegreeBadge(node: HTMLElement) {
+function handleDegreeBadge(
+  node: HTMLElement,
+  onHighlight: OnHighlightCallback
+) {
   if (!utils.isValidElement(node)) return;
 
   const isFirstDegree = utils.isDegreeConnection(
@@ -93,8 +102,9 @@ function handleDegreeBadge(node: HTMLElement) {
       node,
       CONFIG.DEGREE["1st"].PARENT_LEVELS
     );
-    if (container) {
+    if (container && !utils.isAlreadyHighlighted(container)) {
       utils.applyHighlight(container, CONFIG.DEGREE["1st"].HIGHLIGHT_STYLE);
+      onHighlight?.(container);
       return;
     }
   }
@@ -107,23 +117,27 @@ function handleDegreeBadge(node: HTMLElement) {
       node,
       CONFIG.DEGREE["2nd"].PARENT_LEVELS
     );
-    if (container) {
+    if (container && !utils.isAlreadyHighlighted(container)) {
       utils.applyHighlight(container, CONFIG.DEGREE["2nd"].HIGHLIGHT_STYLE);
+      onHighlight?.(container);
     }
   }
 }
 
 // Process existing badges on page
-function processExistingBadges(): number {
+function processExistingBadges(onHighlight: OnHighlightCallback): number {
   const badges = document.querySelectorAll<HTMLElement>(
     CONFIG.SELECTORS.DEGREE_BADGE
   );
-  badges.forEach(handleDegreeBadge);
+  badges.forEach((badge) => handleDegreeBadge(badge, onHighlight));
   return badges.length;
 }
 
 // Create mutation observer for dynamic content
-function createMutationObserver(): MutationObserver {
+function createMutationObserver(
+  onHighlight: (node: HTMLElement) => void,
+  onHighlightRemoved: (node: HTMLElement) => void
+): MutationObserver {
   const obs = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       if (mutation.type !== "childList") continue;
@@ -132,12 +146,33 @@ function createMutationObserver(): MutationObserver {
         if (!utils.isValidElement(node)) return;
 
         if (node.matches?.(CONFIG.SELECTORS.DEGREE_BADGE)) {
-          handleDegreeBadge(node);
+          handleDegreeBadge(node, onHighlight);
         }
 
-        node
-          .querySelectorAll?.<HTMLElement>(CONFIG.SELECTORS.DEGREE_BADGE)
-          .forEach(handleDegreeBadge);
+        const badges = node.querySelectorAll?.<HTMLElement>(
+          CONFIG.SELECTORS.DEGREE_BADGE
+        );
+        badges?.forEach((badge) => handleDegreeBadge(badge, onHighlight));
+      });
+
+      mutation.removedNodes.forEach((node) => {
+        if (!utils.isValidElement(node)) return;
+
+        if (node.matches?.(CONFIG.SELECTORS.DEGREE_BADGE)) {
+          // handleDegreeBadge(node, onHighlight);
+          if (utils.isAlreadyHighlighted(node)) {
+            onHighlightRemoved(node);
+          }
+        }
+
+        const badges = node.querySelectorAll?.<HTMLElement>(
+          CONFIG.SELECTORS.DEGREE_BADGE
+        );
+        badges?.forEach((badge) => {
+          if (utils.isAlreadyHighlighted(badge)) {
+            onHighlightRemoved(badge);
+          }
+        });
       });
     }
   });
@@ -147,16 +182,22 @@ function createMutationObserver(): MutationObserver {
 }
 
 // Start highlighting
-function startHighlighting(): { success: boolean; count: number } {
-  if (isActive) {
-    return { success: true, count: 0 };
+function startHighlighting(
+  onHighlight: OnHighlightCallback,
+  onHighlightRemoved: OnHighlightCallback
+): {
+  success: boolean;
+  count: number;
+} {
+  if (isActive && observer) {
+    observer.disconnect();
   }
 
   logger.info("Starting 2nd degree connection highlighter...");
   isActive = true;
+  observer = createMutationObserver(onHighlight, onHighlightRemoved);
 
-  const count = processExistingBadges();
-  observer = createMutationObserver();
+  const count = processExistingBadges(onHighlight);
 
   logger.info(`Highlighted ${count} existing badges, watching for new ones...`);
   return { success: true, count };
@@ -214,7 +255,14 @@ export default defineContentScript({
 
       switch (message.action) {
         case "degree_highlight_start":
-          const startResult = startHighlighting();
+          const startResult = startHighlighting(
+            (node) => {
+              logger.info("Highlighting node:", node);
+            },
+            (node) => {
+              logger.info("Highlight removed node:", node);
+            }
+          );
           sendResponse(startResult); // ✅ Send response
           break;
         case "degree_highlight_stop":
@@ -226,6 +274,8 @@ export default defineContentScript({
           break;
         case "track_profile_new_connection":
         case "track_profile_dtm":
+        case "track_profile_birthday":
+        case "track_profile_work_anniversary":
           const trackProfileResult = trackProfile();
           sendResponse({ success: true, data: trackProfileResult });
           break;

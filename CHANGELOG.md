@@ -1,5 +1,29 @@
 # linkedin-extension
 
+## 0.0.11
+
+### Patch Changes
+
+- f58a826: feat: add birthday and work anniversary profile tracking
+
+## 0.0.10
+
+### Patch Changes
+
+- 282e5c5: refactor: add highlight lifecycle callbacks and update popup styles
+
+## 0.0.9
+
+### Patch Changes
+
+- 9b2ba0b: fix: update store action names to match content script handlers
+
+## 0.0.8
+
+### Patch Changes
+
+- 425ba72: feat: move state to zustand store
+
 ## 0.0.7
 
 ### Patch Changes
