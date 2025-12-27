@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.0.10
+
+### Patch Changes
+
+- 282e5c5: refactor: add highlight lifecycle callbacks and update popup styles
+
 ## 0.0.9
 
 ### Patch Changes
