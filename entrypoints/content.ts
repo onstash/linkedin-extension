@@ -244,8 +244,109 @@ function trackProfile() {
   };
 }
 
+function trackBookmarkInstagram() {
+  try {
+    const url = window.location.href;
+    const h1Tags = Array.from(document.querySelectorAll("h1"));
+    console.log("trackBookmarkInstagram", { h1Tags });
+
+    if (!h1Tags.length) {
+      const span = document.querySelector(
+        "span." +
+          "x193iq5w xeuugli x13faqbe x1vvkbs xt0psk2 x1i0vuye xvs91rp xo1l8bm x5n08af x10wh9bi xpm28yp x8viiok x1o7cslx x126k92a"
+            .split(" ")
+            .join(".")
+      );
+      console.log("trackBookmarkInstagram", { span });
+      if (!span) {
+        return {
+          success: false,
+          issues: [{ message: "Content not found" }],
+        };
+      }
+      return {
+        success: true,
+        data: {
+          url,
+          caption: span!.innerText,
+        },
+      };
+    }
+    const caption =
+      h1Tags.length > 1 ? h1Tags[1].innerText : h1Tags[0].innerText;
+    return {
+      success: true,
+      data: {
+        url,
+        caption,
+      },
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      issues: [{ message: "Content not found" }],
+    };
+  }
+}
+
+function trackBookmarkTwitter() {
+  try {
+    const url = window.location.href;
+    const tweets = Array.from(
+      document.querySelectorAll("[data-testid='tweetText']")
+    );
+    const tweetsCount = tweets.length;
+    if (!tweetsCount) {
+      return {
+        success: false,
+        issues: [{ message: "Content not found" }],
+      };
+    }
+    if (tweetsCount > 1) {
+      // return {
+      //   success: false,
+      //   issues: [{ message: "Multiple tweets found" }],
+      // };
+      return {
+        success: true,
+        data: {
+          url,
+          caption: "",
+        },
+      };
+    }
+
+    console.log("trackBookmarkTwitter", { tweets });
+    // @ts-ignore
+    const caption = tweets[0].innerText;
+    if (!caption) {
+      return {
+        success: false,
+        issues: [{ message: "Content not found" }],
+      };
+    }
+    return {
+      success: true,
+      data: {
+        url,
+        caption,
+      },
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      issues: [{ message: (err as Error).message }],
+    };
+  }
+}
+
 export default defineContentScript({
-  matches: ["*://*.linkedin.com/feed/*", "*://*.linkedin.com/in/*"],
+  matches: [
+    "*://*.linkedin.com/feed/*",
+    "*://*.linkedin.com/in/*",
+    "*://*.instagram.com/*",
+    "*://*.x.com/*",
+  ],
   main() {
     logger.info("Content script loaded, waiting for activation...");
 
@@ -277,10 +378,65 @@ export default defineContentScript({
         case "track_profile_birthday":
         case "track_profile_work_anniversary":
           const trackProfileResult = trackProfile();
-          sendResponse({ success: true, data: trackProfileResult });
+          sendResponse(trackProfileResult);
+          break;
+        case "track_bookmark":
+          const url = window.location.href;
+          const isInstagram = url.includes("instagram.com");
+          const isTwitter = url.includes("x.com");
+          // sendResponse({
+          //   success: false,
+          //   issues: [
+          //     {
+          //       message: "Invalid action - track_bookmark [0]",
+          //     },
+          //     {
+          //       message: url,
+          //     },
+          //     {
+          //       message: `isInstagram=${isInstagram}`,
+          //     },
+          //     {
+          //       message: `isTwitter=${isTwitter}`,
+          //     },
+          //   ],
+          // });
+          // break;
+          if (isInstagram) {
+            const trackBookmarkInstagramResult = trackBookmarkInstagram();
+            sendResponse(trackBookmarkInstagramResult);
+          } else if (isTwitter) {
+            const trackBookmarkTwitterResult = trackBookmarkTwitter();
+            sendResponse(trackBookmarkTwitterResult);
+          } else {
+            sendResponse({
+              success: false,
+              issues: [
+                {
+                  message: "Invalid action - track_bookmark [1]",
+                },
+                {
+                  message: url,
+                },
+                {
+                  message: `isInstagram=${isInstagram}`,
+                },
+                {
+                  message: `isTwitter=${isTwitter}`,
+                },
+              ],
+            });
+          }
           break;
         default:
-          sendResponse({ success: false, error: "Invalid action" });
+          sendResponse({
+            success: false,
+            issues: [
+              {
+                message: "Invalid action - default",
+              },
+            ],
+          });
       }
       return true; // Keep message channel open for async response
     });
