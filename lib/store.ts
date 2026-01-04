@@ -1,36 +1,16 @@
 import { create } from "zustand";
 
-type TrackActionType =
+export type TrackActionType =
   | "new_connection"
   | "dtm"
   | "birthday"
-  | "work_anniversary";
+  | "work_anniversary"
+  | "start_conversation";
 
-interface TrackProfileResult {
-  success: boolean;
-  data:
-    | {
-        success: true;
-        data: {
-          fullName: string;
-          profileLink: string;
-        };
-      }
-    | {
-        success: false;
-        issues: {
-          message: string;
-        }[];
-      };
-}
-
-type TrackBookmarkResult =
+type TrackResult<T> =
   | {
       success: true;
-      data: {
-        url: string;
-        caption: string;
-      };
+      data: T;
     }
   | {
       success: false;
@@ -38,6 +18,15 @@ type TrackBookmarkResult =
         message: string;
       }[];
     };
+
+type TrackProfileResult = TrackResult<{
+  fullName: string;
+  profileLink: string;
+}>;
+type TrackBookmarkResult = TrackResult<{
+  url: string;
+  caption: string;
+}>;
 
 interface ExtensionState {
   // Degree Highlighter State
@@ -80,6 +69,8 @@ function getFormAction(actionType: TrackActionType) {
       return "Birthday";
     case "work_anniversary":
       return "Work%20Anniversary";
+    case "start_conversation":
+      return "Start%20Conversation";
   }
 }
 
@@ -184,16 +175,12 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       })) as TrackProfileResult;
 
       if (response?.success) {
-        if (response?.data?.success) {
-          set({ trackProfileStatus: `Profile tracked - ${actionType}` });
-          const formAction = getFormAction(actionType);
-          window.open(
-            `https://app.youform.com/forms/u5msmgsv?fullname=${response.data.data.fullName}&profilelink=${response.data.data.profileLink}&action=${formAction}`,
-            "_blank"
-          );
-        } else {
-          set({ trackProfileStatus: `Profile tracked - ${actionType}` });
-        }
+        set({ trackProfileStatus: `Profile tracked - ${actionType}` });
+        const formAction = getFormAction(actionType);
+        window.open(
+          `https://app.youform.com/forms/u5msmgsv?fullname=${response.data.fullName}&profilelink=${response.data.profileLink}&action=${formAction}`,
+          "_blank"
+        );
       } else {
         set({
           trackProfileStatus: "Error communicating with page",

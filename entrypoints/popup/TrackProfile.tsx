@@ -1,7 +1,33 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, UserPlus } from "lucide-react";
-import { useExtensionStore } from "@/lib/store";
+import { TrackActionType, useExtensionStore } from "@/lib/store";
+
+const trackProfileButtonWithActions: Array<{
+  actionType: TrackActionType;
+  label: string;
+}> = [
+  {
+    actionType: "new_connection",
+    label: "Track (new connection)",
+  },
+  {
+    actionType: "dtm",
+    label: "Track (DTM)",
+  },
+  {
+    actionType: "birthday",
+    label: "Track (Birthday)",
+  },
+  {
+    actionType: "work_anniversary",
+    label: "Track (Work Anniversary)",
+  },
+  {
+    actionType: "start_conversation",
+    label: "Track (Start Conversation)",
+  },
+];
 
 export function TrackProfile() {
   const { trackProfileError, trackProfile } = useExtensionStore();
@@ -15,41 +41,16 @@ export function TrackProfile() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button
-          onClick={() => trackProfile("new_connection")}
-          variant="default"
-          className="w-full"
-          size="lg"
-        >
-          Track Profile (new connection)
-        </Button>
-
-        <Button
-          onClick={() => trackProfile("dtm")}
-          variant="default"
-          className="w-full"
-          size="lg"
-        >
-          Track Profile (DTM)
-        </Button>
-
-        <Button
-          onClick={() => trackProfile("birthday")}
-          variant="default"
-          className="w-full"
-          size="lg"
-        >
-          Track Profile (Birthday)
-        </Button>
-
-        <Button
-          onClick={() => trackProfile("work_anniversary")}
-          variant="default"
-          className="w-full"
-          size="lg"
-        >
-          Track Profile (Work Anniversary)
-        </Button>
+        {trackProfileButtonWithActions.map((button) => (
+          <Button
+            onClick={() => trackProfile(button.actionType)}
+            variant="default"
+            className="w-full"
+            size="lg"
+          >
+            {button.label}
+          </Button>
+        ))}
 
         {trackProfileError && (
           <div className="flex items-center gap-2 text-sm">

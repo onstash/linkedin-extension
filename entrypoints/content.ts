@@ -377,31 +377,15 @@ export default defineContentScript({
         case "track_profile_dtm":
         case "track_profile_birthday":
         case "track_profile_work_anniversary":
+        case "track_profile_start_conversation":
           const trackProfileResult = trackProfile();
+          logger.info("Track profile result:", trackProfileResult);
           sendResponse(trackProfileResult);
           break;
         case "track_bookmark":
           const url = window.location.href;
           const isInstagram = url.includes("instagram.com");
           const isTwitter = url.includes("x.com");
-          // sendResponse({
-          //   success: false,
-          //   issues: [
-          //     {
-          //       message: "Invalid action - track_bookmark [0]",
-          //     },
-          //     {
-          //       message: url,
-          //     },
-          //     {
-          //       message: `isInstagram=${isInstagram}`,
-          //     },
-          //     {
-          //       message: `isTwitter=${isTwitter}`,
-          //     },
-          //   ],
-          // });
-          // break;
           if (isInstagram) {
             const trackBookmarkInstagramResult = trackBookmarkInstagram();
             sendResponse(trackBookmarkInstagramResult);
