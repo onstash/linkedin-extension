@@ -8,4 +8,10 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()],
   }),
+  manifest: {
+    action: {
+      default_title: "LinkedIn++",
+    },
+    permissions: ["tabs"],
+  },
 });

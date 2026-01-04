@@ -1,28 +1,32 @@
 import { create } from "zustand";
 
-type TrackActionType =
+export type TrackActionType =
   | "new_connection"
   | "dtm"
   | "birthday"
-  | "work_anniversary";
+  | "work_anniversary"
+  | "start_conversation";
 
-interface TrackProfileResult {
-  success: boolean;
-  data:
-    | {
-        success: true;
-        data: {
-          fullName: string;
-          profileLink: string;
-        };
-      }
-    | {
-        success: false;
-        issues: {
-          message: string;
-        }[];
-      };
-}
+type TrackResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      issues: {
+        message: string;
+      }[];
+    };
+
+type TrackProfileResult = TrackResult<{
+  fullName: string;
+  profileLink: string;
+}>;
+type TrackBookmarkResult = TrackResult<{
+  url: string;
+  caption: string;
+}>;
 
 interface ExtensionState {
   // Degree Highlighter State
@@ -31,8 +35,8 @@ interface ExtensionState {
   highlightError: Error | null;
 
   // Track Profile State
-  trackStatus: string;
-  trackError: Error | null;
+  trackProfileStatus: string;
+  trackProfileError: Error | null;
 
   // Highlight Actions
   checkHighlightStatus: () => Promise<void>;
@@ -40,6 +44,19 @@ interface ExtensionState {
 
   // Track Profile Actions
   trackProfile: (actionType: TrackActionType) => Promise<void>;
+
+  // Track Bookmark State
+  trackBookmarkStatus: string;
+  trackBookmarkError: Error | null;
+
+  // Track Bookmark
+  trackBookmark: ({
+    url,
+    caption,
+  }: {
+    url: string;
+    caption: string;
+  }) => Promise<void>;
 }
 
 function getFormAction(actionType: TrackActionType) {
@@ -52,6 +69,8 @@ function getFormAction(actionType: TrackActionType) {
       return "Birthday";
     case "work_anniversary":
       return "Work%20Anniversary";
+    case "start_conversation":
+      return "Start%20Conversation";
   }
 }
 
@@ -62,8 +81,12 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
   highlightError: null,
 
   // Initial State - Track Profile
-  trackStatus: "Ready",
-  trackError: null,
+  trackProfileStatus: "Ready",
+  trackProfileError: null,
+
+  // Initial State - Track Bookmark
+  trackBookmarkStatus: "Ready",
+  trackBookmarkError: null,
 
   // Check current status from content script
   checkHighlightStatus: async () => {
@@ -141,39 +164,83 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       });
 
       if (!tab?.id) {
-        set({ trackStatus: "No active tab found" });
+        set({ trackProfileStatus: "No active tab found" });
         return;
       }
 
-      set({ trackError: null });
+      set({ trackProfileError: null });
       const action = `track_profile_${actionType}`;
       const response = (await browser.tabs.sendMessage(tab.id, {
         action,
       })) as TrackProfileResult;
 
       if (response?.success) {
-        if (response?.data?.success) {
-          set({ trackStatus: `Profile tracked - ${actionType}` });
-          const formAction = getFormAction(actionType);
-          window.open(
-            `https://app.youform.com/forms/u5msmgsv?fullname=${response.data.data.fullName}&profilelink=${response.data.data.profileLink}&action=${formAction}`,
-            "_blank"
-          );
-        } else {
-          set({ trackStatus: `Profile tracked - ${actionType}` });
-        }
+        set({ trackProfileStatus: `Profile tracked - ${actionType}` });
+        const formAction = getFormAction(actionType);
+        window.open(
+          `https://app.youform.com/forms/u5msmgsv?fullname=${response.data.fullName}&profilelink=${response.data.profileLink}&action=${formAction}`,
+          "_blank"
+        );
       } else {
         set({
-          trackStatus: "Error communicating with page",
-          trackError: new Error("Error communicating with page"),
+          trackProfileStatus: "Error communicating with page",
+          trackProfileError: new Error("Error communicating with page"),
         });
       }
     } catch (err) {
       const error = err as Error;
       console.error("Error:", error);
       set({
-        trackStatus: "Error communicating with page",
-        trackError: error,
+        trackProfileStatus: "Error communicating with page",
+        trackProfileError: error,
+      });
+    }
+  },
+
+  // Track bookmark
+  trackBookmark: async () => {
+    try {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (!tab?.id) {
+        set({ trackBookmarkStatus: "No active tab found" });
+        return;
+      }
+
+      set({ trackBookmarkError: null });
+      const action = "track_bookmark";
+      const response = (await browser.tabs.sendMessage(tab.id, {
+        action,
+      })) as TrackBookmarkResult;
+
+      if (response?.success) {
+        if (response?.data) {
+          set({ trackBookmarkStatus: `Bookmark tracked` });
+          // https://app.youform.com/forms/f6gffax5
+          window.open(
+            `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
+            "_blank"
+          );
+        } else {
+          set({ trackBookmarkStatus: `Bookmark tracked` });
+        }
+      } else {
+        const errorMessage = `Error communicating with page: ${response.issues.map((issue) => issue.message).join(", ")}`;
+        alert(errorMessage);
+        set({
+          trackBookmarkStatus: errorMessage,
+          trackBookmarkError: new Error(errorMessage),
+        });
+      }
+    } catch (err) {
+      const error = err as Error;
+      console.error("Error:", error);
+      set({
+        trackBookmarkStatus: `Error communicating with page: ${error.message}`,
+        trackBookmarkError: error,
       });
     }
   },
