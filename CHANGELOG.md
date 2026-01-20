@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.3.0
+
+### Minor Changes
+
+- 8f0b3c5: Enhanced reliability of Instagram bookmark tracking, improved type safety, and added debug logging.
+
 ## 0.2.0
 
 ### Minor Changes
