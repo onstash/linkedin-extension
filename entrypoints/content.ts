@@ -44,13 +44,13 @@ const utils = {
 
   findContainer: (
     startElement: HTMLElement,
-    levels: number
+    levels: number,
   ): HTMLElement | null => {
     let container: HTMLElement | null = startElement;
     for (let i = 0; i < levels; i++) {
       if (!container?.parentElement) {
         logger.warn(
-          `Container traversal stopped at level ${i}, no parent found`
+          `Container traversal stopped at level ${i}, no parent found`,
         );
         return null;
       }
@@ -66,7 +66,7 @@ const utils = {
 
   applyHighlight: (
     element: HTMLElement,
-    styles: Partial<CSSStyleDeclaration>
+    styles: Partial<CSSStyleDeclaration>,
   ): boolean => {
     try {
       Object.assign(element.style, styles);
@@ -89,18 +89,18 @@ let isActive = false;
 // Main badge handling logic
 function handleDegreeBadge(
   node: HTMLElement,
-  onHighlight: OnHighlightCallback
+  onHighlight: OnHighlightCallback,
 ) {
   if (!utils.isValidElement(node)) return;
 
   const isFirstDegree = utils.isDegreeConnection(
     node,
-    CONFIG.DEGREE["1st"].DEGREE_TEXT
+    CONFIG.DEGREE["1st"].DEGREE_TEXT,
   );
   if (isFirstDegree) {
     const container = utils.findContainer(
       node,
-      CONFIG.DEGREE["1st"].PARENT_LEVELS
+      CONFIG.DEGREE["1st"].PARENT_LEVELS,
     );
     if (container && !utils.isAlreadyHighlighted(container)) {
       utils.applyHighlight(container, CONFIG.DEGREE["1st"].HIGHLIGHT_STYLE);
@@ -110,12 +110,12 @@ function handleDegreeBadge(
   }
   const isSecondDegree = utils.isDegreeConnection(
     node,
-    CONFIG.DEGREE["2nd"].DEGREE_TEXT
+    CONFIG.DEGREE["2nd"].DEGREE_TEXT,
   );
   if (isSecondDegree) {
     const container = utils.findContainer(
       node,
-      CONFIG.DEGREE["2nd"].PARENT_LEVELS
+      CONFIG.DEGREE["2nd"].PARENT_LEVELS,
     );
     if (container && !utils.isAlreadyHighlighted(container)) {
       utils.applyHighlight(container, CONFIG.DEGREE["2nd"].HIGHLIGHT_STYLE);
@@ -127,7 +127,7 @@ function handleDegreeBadge(
 // Process existing badges on page
 function processExistingBadges(onHighlight: OnHighlightCallback): number {
   const badges = document.querySelectorAll<HTMLElement>(
-    CONFIG.SELECTORS.DEGREE_BADGE
+    CONFIG.SELECTORS.DEGREE_BADGE,
   );
   badges.forEach((badge) => handleDegreeBadge(badge, onHighlight));
   return badges.length;
@@ -136,7 +136,7 @@ function processExistingBadges(onHighlight: OnHighlightCallback): number {
 // Create mutation observer for dynamic content
 function createMutationObserver(
   onHighlight: (node: HTMLElement) => void,
-  onHighlightRemoved: (node: HTMLElement) => void
+  onHighlightRemoved: (node: HTMLElement) => void,
 ): MutationObserver {
   const obs = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
@@ -150,7 +150,7 @@ function createMutationObserver(
         }
 
         const badges = node.querySelectorAll?.<HTMLElement>(
-          CONFIG.SELECTORS.DEGREE_BADGE
+          CONFIG.SELECTORS.DEGREE_BADGE,
         );
         badges?.forEach((badge) => handleDegreeBadge(badge, onHighlight));
       });
@@ -166,7 +166,7 @@ function createMutationObserver(
         }
 
         const badges = node.querySelectorAll?.<HTMLElement>(
-          CONFIG.SELECTORS.DEGREE_BADGE
+          CONFIG.SELECTORS.DEGREE_BADGE,
         );
         badges?.forEach((badge) => {
           if (utils.isAlreadyHighlighted(badge)) {
@@ -184,7 +184,7 @@ function createMutationObserver(
 // Start highlighting
 function startHighlighting(
   onHighlight: OnHighlightCallback,
-  onHighlightRemoved: OnHighlightCallback
+  onHighlightRemoved: OnHighlightCallback,
 ): {
   success: boolean;
   count: number;
@@ -217,7 +217,7 @@ function stopHighlighting(): { success: boolean; cleaned: number } {
 
   // Remove highlights
   const highlightedElements = document.querySelectorAll<HTMLElement>(
-    '[data-degree-highlighted="true"]'
+    '[data-degree-highlighted="true"]',
   );
   highlightedElements.forEach((element) => {
     element.style.border = "";
@@ -255,7 +255,7 @@ function trackBookmarkInstagram() {
         "span." +
           "x193iq5w xeuugli x13faqbe x1vvkbs xt0psk2 x1i0vuye xvs91rp xo1l8bm x5n08af x10wh9bi xpm28yp x8viiok x1o7cslx x126k92a"
             .split(" ")
-            .join(".")
+            .join("."),
       );
       console.log("trackBookmarkInstagram", { span });
       if (!span) {
@@ -293,7 +293,7 @@ function trackBookmarkTwitter() {
   try {
     const url = window.location.href;
     const tweets = Array.from(
-      document.querySelectorAll("[data-testid='tweetText']")
+      document.querySelectorAll("[data-testid='tweetText']"),
     );
     const tweetsCount = tweets.length;
     if (!tweetsCount) {
@@ -362,7 +362,7 @@ export default defineContentScript({
             },
             (node) => {
               logger.info("Highlight removed node:", node);
-            }
+            },
           );
           sendResponse(startResult); // ✅ Send response
           break;
@@ -373,7 +373,7 @@ export default defineContentScript({
         case "degree_highlight_status":
           sendResponse({ isActive });
           break;
-        case "track_profile_new_connection":
+        case "track_profile_add_connection":
         case "track_profile_dtm":
         case "track_profile_birthday":
         case "track_profile_work_anniversary":
@@ -413,6 +413,7 @@ export default defineContentScript({
           }
           break;
         default:
+          logger.info("Invalid action - default", message);
           sendResponse({
             success: false,
             issues: [
@@ -421,6 +422,7 @@ export default defineContentScript({
               },
             ],
           });
+          break;
       }
       return true; // Keep message channel open for async response
     });

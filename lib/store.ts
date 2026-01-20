@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export type TrackActionType =
-  | "new_connection"
+  | "add_connection"
   | "dtm"
   | "birthday"
   | "work_anniversary"
@@ -61,7 +61,7 @@ interface ExtensionState {
 
 function getFormAction(actionType: TrackActionType) {
   switch (actionType) {
-    case "new_connection":
+    case "add_connection":
       return "Add%20Connection";
     case "dtm":
       return "DTM";
@@ -179,7 +179,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
         const formAction = getFormAction(actionType);
         window.open(
           `https://app.youform.com/forms/u5msmgsv?fullname=${response.data.fullName}&profilelink=${response.data.profileLink}&action=${formAction}`,
-          "_blank"
+          "_blank",
         );
       } else {
         set({
@@ -222,7 +222,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
           // https://app.youform.com/forms/f6gffax5
           window.open(
             `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
-            "_blank"
+            "_blank",
           );
         } else {
           set({ trackBookmarkStatus: `Bookmark tracked` });
