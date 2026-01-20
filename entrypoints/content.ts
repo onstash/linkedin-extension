@@ -244,9 +244,26 @@ function trackProfile() {
   };
 }
 
-function trackBookmarkInstagram() {
+type TrackResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      issues: {
+        message: string;
+      }[];
+    };
+
+type TrackBookmarkResult = TrackResult<{
+  url: string;
+  caption: string;
+}>;
+
+function trackBookmarkInstagram(): TrackBookmarkResult {
+  const url = window.location.href;
   try {
-    const url = window.location.href;
     const h1Tags = Array.from(document.querySelectorAll("h1"));
     console.log("trackBookmarkInstagram", { h1Tags });
 
@@ -268,7 +285,8 @@ function trackBookmarkInstagram() {
         success: true,
         data: {
           url,
-          caption: span!.innerText,
+          caption:
+            "innerText" in span ? ((span.innerText as string) ?? "") : "",
         },
       };
     }
@@ -282,9 +300,14 @@ function trackBookmarkInstagram() {
       },
     };
   } catch (err: unknown) {
+    console.error("trackBookmarkInstagram", err);
+    //
     return {
-      success: false,
-      issues: [{ message: "Content not found" }],
+      success: true,
+      data: {
+        url,
+        caption: "",
+      },
     };
   }
 }

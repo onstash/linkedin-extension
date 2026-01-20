@@ -215,6 +215,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       const response = (await browser.tabs.sendMessage(tab.id, {
         action,
       })) as TrackBookmarkResult;
+      console.log("trackBookmark", { response });
 
       if (response?.success) {
         if (response?.data) {
