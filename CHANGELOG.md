@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.2.0
+
+### Minor Changes
+
+- b0b9890: Added conventional commit message prompt files. Renamed 'new_connection' to 'add_connection' in tracking logic and fixed formatting issues.
+
 ## 0.1.0
 
 ### Minor Changes
