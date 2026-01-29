@@ -16,7 +16,7 @@ export function DegreeHighlighter() {
     highlightStatus,
     highlightError,
     checkHighlightStatus,
-    toggleHighlighting,
+    toggleHighlightingV2,
   } = useExtensionStore();
 
   // Check status on mount
@@ -34,7 +34,7 @@ export function DegreeHighlighter() {
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
-          onClick={toggleHighlighting}
+          onClick={toggleHighlightingV2}
           variant={isHighlighting ? "destructive" : "default"}
           className="w-full"
           size="lg"

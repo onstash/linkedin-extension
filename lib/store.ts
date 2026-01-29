@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { linkedInDegreeHighlightingLogger } from "./logger";
 
 export type TrackActionType =
   | "add_connection"
@@ -40,7 +41,7 @@ interface ExtensionState {
 
   // Highlight Actions
   checkHighlightStatus: () => Promise<void>;
-  toggleHighlighting: () => Promise<void>;
+  toggleHighlightingV2: () => Promise<void>;
 
   // Track Profile Actions
   trackProfile: (actionType: TrackActionType) => Promise<void>;
@@ -112,16 +113,27 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
   },
 
   // Toggle highlighting on/off
-  toggleHighlighting: async () => {
+  toggleHighlightingV2: async () => {
     const { isHighlighting } = get();
+    linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
+      isHighlighting,
+    });
 
     try {
       const [tab] = await browser.tabs.query({
         active: true,
         currentWindow: true,
       });
+      linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
+        isHighlighting,
+        tab,
+      });
 
       if (!tab?.id) {
+        linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
+          isHighlighting,
+          tab,
+        });
         set({ highlightStatus: "No active tab found" });
         return;
       }
@@ -130,7 +142,16 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       const action = isHighlighting
         ? "degree_highlight_stop"
         : "degree_highlight_start";
+      linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
+        isHighlighting,
+        action,
+      });
       const response = await browser.tabs.sendMessage(tab.id, { action });
+      linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
+        isHighlighting,
+        action,
+        response,
+      });
 
       if (response?.success) {
         set({ isHighlighting: !isHighlighting });
@@ -147,7 +168,10 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       }
     } catch (err) {
       const error = err as Error;
-      console.error("Error:", error);
+      linkedInDegreeHighlightingLogger.error("toggleHighlighting", {
+        isHighlighting,
+        error,
+      });
       set({
         highlightStatus: "Error communicating with page",
         highlightError: error,
