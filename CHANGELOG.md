@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.4.0
+
+### Minor Changes
+
+- 57d3149: feat(highlighting): implement robust degree highlighting with observers
+
 ## 0.3.0
 
 ### Minor Changes
