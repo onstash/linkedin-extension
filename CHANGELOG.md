@@ -1,5 +1,23 @@
 # linkedin-extension
 
+## 0.4.0
+
+### Minor Changes
+
+- 57d3149: feat(highlighting): implement robust degree highlighting with observers
+
+## 0.3.0
+
+### Minor Changes
+
+- 8f0b3c5: Enhanced reliability of Instagram bookmark tracking, improved type safety, and added debug logging.
+
+## 0.2.0
+
+### Minor Changes
+
+- b0b9890: Added conventional commit message prompt files. Renamed 'new_connection' to 'add_connection' in tracking logic and fixed formatting issues.
+
 ## 0.1.0
 
 ### Minor Changes

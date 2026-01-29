@@ -1,9 +1,21 @@
+import {
+  contentScriptLogger,
+  linkedInDegreeHighlightingLogger,
+} from "@/lib/logger";
+import { highlight1stAnd2ndDegreeConnections } from "./popup/linkedin-content";
+
 // Configuration constants
+const classNameToQuerySelector = (val: string) =>
+  `.${val.split(" ").join(".")}`;
+
 const CONFIG = {
   SELECTORS: {
-    DEGREE_BADGE:
-      ".social-details-reactors-modal >* .artdeco-entity-lockup__degree",
-    CONTAINER: ".social-details-reactors-modal",
+    DEGREE_BADGE: classNameToQuerySelector(
+      "_8fc3671d dcfb0537 a48f26ff _4560f919 _672e5870",
+    ),
+    CONTAINER: classNameToQuerySelector(
+      "e0744685 cba660dd bbfbb7c5 f0150480 c11ce368 b9adc9a2 _6a90e9a7 _13057166 _9b4be851 d6ae496c",
+    ),
   },
   DEGREE: {
     "1st": {
@@ -26,208 +38,11 @@ const CONFIG = {
   DEBUG: true,
 };
 
-// Centralized logging with levels
-const logger = {
-  debug: (...args: unknown[]) =>
-    CONFIG.DEBUG && console.log("[LinkedIn++]", ...args),
-  info: (...args: unknown[]) => console.log("[LinkedIn++]", ...args),
-  warn: (...args: unknown[]) => console.warn("[LinkedIn++]", ...args),
-  error: (...args: unknown[]) => console.error("[LinkedIn++]", ...args),
-};
-
-type OnHighlightCallback = (node: HTMLElement) => void;
-
-// Helper functions
-const utils = {
-  isValidElement: (element: Node | null): element is HTMLElement =>
-    element !== null && element.nodeType === Node.ELEMENT_NODE,
-
-  findContainer: (
-    startElement: HTMLElement,
-    levels: number
-  ): HTMLElement | null => {
-    let container: HTMLElement | null = startElement;
-    for (let i = 0; i < levels; i++) {
-      if (!container?.parentElement) {
-        logger.warn(
-          `Container traversal stopped at level ${i}, no parent found`
-        );
-        return null;
-      }
-      container = container.parentElement;
-    }
-    return container;
-  },
-
-  isDegreeConnection: (element: HTMLElement, degreeText: string): boolean => {
-    const text = element.innerText?.trim() || "";
-    return text.endsWith(degreeText);
-  },
-
-  applyHighlight: (
-    element: HTMLElement,
-    styles: Partial<CSSStyleDeclaration>
-  ): boolean => {
-    try {
-      Object.assign(element.style, styles);
-      element.setAttribute("data-degree-highlighted", "true");
-      return true;
-    } catch (error) {
-      logger.error("Failed to apply highlight:", error);
-      return false;
-    }
-  },
-
-  isAlreadyHighlighted: (element: HTMLElement): boolean => {
-    return element.hasAttribute("data-degree-highlighted");
+const CONFIG2 = {
+  SELECTORS: {
+    CONTAINER: "[data-view-name='view-likers']",
   },
 };
-
-let observer: MutationObserver | null = null;
-let isActive = false;
-
-// Main badge handling logic
-function handleDegreeBadge(
-  node: HTMLElement,
-  onHighlight: OnHighlightCallback
-) {
-  if (!utils.isValidElement(node)) return;
-
-  const isFirstDegree = utils.isDegreeConnection(
-    node,
-    CONFIG.DEGREE["1st"].DEGREE_TEXT
-  );
-  if (isFirstDegree) {
-    const container = utils.findContainer(
-      node,
-      CONFIG.DEGREE["1st"].PARENT_LEVELS
-    );
-    if (container && !utils.isAlreadyHighlighted(container)) {
-      utils.applyHighlight(container, CONFIG.DEGREE["1st"].HIGHLIGHT_STYLE);
-      onHighlight?.(container);
-      return;
-    }
-  }
-  const isSecondDegree = utils.isDegreeConnection(
-    node,
-    CONFIG.DEGREE["2nd"].DEGREE_TEXT
-  );
-  if (isSecondDegree) {
-    const container = utils.findContainer(
-      node,
-      CONFIG.DEGREE["2nd"].PARENT_LEVELS
-    );
-    if (container && !utils.isAlreadyHighlighted(container)) {
-      utils.applyHighlight(container, CONFIG.DEGREE["2nd"].HIGHLIGHT_STYLE);
-      onHighlight?.(container);
-    }
-  }
-}
-
-// Process existing badges on page
-function processExistingBadges(onHighlight: OnHighlightCallback): number {
-  const badges = document.querySelectorAll<HTMLElement>(
-    CONFIG.SELECTORS.DEGREE_BADGE
-  );
-  badges.forEach((badge) => handleDegreeBadge(badge, onHighlight));
-  return badges.length;
-}
-
-// Create mutation observer for dynamic content
-function createMutationObserver(
-  onHighlight: (node: HTMLElement) => void,
-  onHighlightRemoved: (node: HTMLElement) => void
-): MutationObserver {
-  const obs = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type !== "childList") continue;
-
-      mutation.addedNodes.forEach((node) => {
-        if (!utils.isValidElement(node)) return;
-
-        if (node.matches?.(CONFIG.SELECTORS.DEGREE_BADGE)) {
-          handleDegreeBadge(node, onHighlight);
-        }
-
-        const badges = node.querySelectorAll?.<HTMLElement>(
-          CONFIG.SELECTORS.DEGREE_BADGE
-        );
-        badges?.forEach((badge) => handleDegreeBadge(badge, onHighlight));
-      });
-
-      mutation.removedNodes.forEach((node) => {
-        if (!utils.isValidElement(node)) return;
-
-        if (node.matches?.(CONFIG.SELECTORS.DEGREE_BADGE)) {
-          // handleDegreeBadge(node, onHighlight);
-          if (utils.isAlreadyHighlighted(node)) {
-            onHighlightRemoved(node);
-          }
-        }
-
-        const badges = node.querySelectorAll?.<HTMLElement>(
-          CONFIG.SELECTORS.DEGREE_BADGE
-        );
-        badges?.forEach((badge) => {
-          if (utils.isAlreadyHighlighted(badge)) {
-            onHighlightRemoved(badge);
-          }
-        });
-      });
-    }
-  });
-
-  obs.observe(document.body, { childList: true, subtree: true });
-  return obs;
-}
-
-// Start highlighting
-function startHighlighting(
-  onHighlight: OnHighlightCallback,
-  onHighlightRemoved: OnHighlightCallback
-): {
-  success: boolean;
-  count: number;
-} {
-  if (isActive && observer) {
-    observer.disconnect();
-  }
-
-  logger.info("Starting 2nd degree connection highlighter...");
-  isActive = true;
-  observer = createMutationObserver(onHighlight, onHighlightRemoved);
-
-  const count = processExistingBadges(onHighlight);
-
-  logger.info(`Highlighted ${count} existing badges, watching for new ones...`);
-  return { success: true, count };
-}
-
-// Stop highlighting and clean up
-function stopHighlighting(): { success: boolean; cleaned: number } {
-  if (!isActive) {
-    return { success: true, cleaned: 0 };
-  }
-
-  logger.info("Stopping highlighter...");
-  isActive = false;
-
-  observer?.disconnect();
-  observer = null;
-
-  // Remove highlights
-  const highlightedElements = document.querySelectorAll<HTMLElement>(
-    '[data-degree-highlighted="true"]'
-  );
-  highlightedElements.forEach((element) => {
-    element.style.border = "";
-    element.style.backgroundColor = "";
-    element.removeAttribute("data-degree-highlighted");
-  });
-
-  logger.info(`Cleaned up ${highlightedElements.length} highlighted elements`);
-  return { success: true, cleaned: highlightedElements.length };
-}
 
 function trackProfile() {
   const fullName = document.querySelector<HTMLElement>("a > h1");
@@ -244,9 +59,26 @@ function trackProfile() {
   };
 }
 
-function trackBookmarkInstagram() {
+type TrackResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      issues: {
+        message: string;
+      }[];
+    };
+
+type TrackBookmarkResult = TrackResult<{
+  url: string;
+  caption: string;
+}>;
+
+function trackBookmarkInstagram(): TrackBookmarkResult {
+  const url = window.location.href;
   try {
-    const url = window.location.href;
     const h1Tags = Array.from(document.querySelectorAll("h1"));
     console.log("trackBookmarkInstagram", { h1Tags });
 
@@ -255,20 +87,25 @@ function trackBookmarkInstagram() {
         "span." +
           "x193iq5w xeuugli x13faqbe x1vvkbs xt0psk2 x1i0vuye xvs91rp xo1l8bm x5n08af x10wh9bi xpm28yp x8viiok x1o7cslx x126k92a"
             .split(" ")
-            .join(".")
+            .join("."),
       );
       console.log("trackBookmarkInstagram", { span });
       if (!span) {
+        //
         return {
-          success: false,
-          issues: [{ message: "Content not found" }],
+          success: true,
+          data: {
+            url,
+            caption: "",
+          },
         };
       }
       return {
         success: true,
         data: {
           url,
-          caption: span!.innerText,
+          caption:
+            "innerText" in span ? ((span.innerText as string) ?? "") : "",
         },
       };
     }
@@ -282,9 +119,14 @@ function trackBookmarkInstagram() {
       },
     };
   } catch (err: unknown) {
+    console.error("trackBookmarkInstagram", err);
+    //
     return {
-      success: false,
-      issues: [{ message: "Content not found" }],
+      success: true,
+      data: {
+        url,
+        caption: "",
+      },
     };
   }
 }
@@ -293,7 +135,7 @@ function trackBookmarkTwitter() {
   try {
     const url = window.location.href;
     const tweets = Array.from(
-      document.querySelectorAll("[data-testid='tweetText']")
+      document.querySelectorAll("[data-testid='tweetText']"),
     );
     const tweetsCount = tweets.length;
     if (!tweetsCount) {
@@ -348,38 +190,55 @@ export default defineContentScript({
     "*://*.x.com/*",
   ],
   main() {
-    logger.info("Content script loaded, waiting for activation...");
+    contentScriptLogger.info(
+      "Content script loaded, waiting for activation...",
+    );
 
     // Listen for messages from popup
     browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      logger.debug("Received message:", message);
+      contentScriptLogger.debug("Received message:", message);
 
       switch (message.action) {
         case "degree_highlight_start":
-          const startResult = startHighlighting(
-            (node) => {
-              logger.info("Highlighting node:", node);
+          linkedInDegreeHighlightingLogger.debug(
+            "[contentScript] toggleHighlighting",
+            {
+              action: "degree_highlight_start",
             },
-            (node) => {
-              logger.info("Highlight removed node:", node);
-            }
           );
-          sendResponse(startResult); // ✅ Send response
+          highlight1stAnd2ndDegreeConnections("start");
+          sendResponse({
+            success: true,
+            data: {
+              action: "degree_highlight_start",
+            },
+          });
           break;
         case "degree_highlight_stop":
-          const stopResult = stopHighlighting();
-          sendResponse(stopResult); // ✅ Send response
+          linkedInDegreeHighlightingLogger.debug(
+            "[contentScript] toggleHighlighting",
+            {
+              action: "degree_highlight_stop",
+            },
+          );
+          highlight1stAnd2ndDegreeConnections("stop");
+          sendResponse({
+            success: true,
+            data: {
+              action: "degree_highlight_stop",
+            },
+          });
           break;
         case "degree_highlight_status":
-          sendResponse({ isActive });
+          sendResponse({ isActive: false });
           break;
-        case "track_profile_new_connection":
+        case "track_profile_add_connection":
         case "track_profile_dtm":
         case "track_profile_birthday":
         case "track_profile_work_anniversary":
         case "track_profile_start_conversation":
           const trackProfileResult = trackProfile();
-          logger.info("Track profile result:", trackProfileResult);
+          contentScriptLogger.info("Track profile result:", trackProfileResult);
           sendResponse(trackProfileResult);
           break;
         case "track_bookmark":
@@ -413,6 +272,7 @@ export default defineContentScript({
           }
           break;
         default:
+          contentScriptLogger.info("Invalid action - default", message);
           sendResponse({
             success: false,
             issues: [
@@ -421,6 +281,7 @@ export default defineContentScript({
               },
             ],
           });
+          break;
       }
       return true; // Keep message channel open for async response
     });
