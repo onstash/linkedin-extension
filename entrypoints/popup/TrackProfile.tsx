@@ -8,8 +8,8 @@ const trackProfileButtonWithActions: Array<{
   label: string;
 }> = [
   {
-    actionType: "add_connection",
-    label: "Track (Add Connection)",
+    actionType: "new_connection",
+    label: "Track (new connection)",
   },
   {
     actionType: "dtm",

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { linkedInDegreeHighlightingLogger } from "./logger";
 
 export type TrackActionType =
-  | "add_connection"
+  | "new_connection"
   | "dtm"
   | "birthday"
   | "work_anniversary"
