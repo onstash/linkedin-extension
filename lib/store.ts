@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { linkedInDegreeHighlightingLogger } from "./logger";
+import {
+  linkedInDegreeHighlightingLogger,
+  bookmarks2ActionLogger,
+} from "./logger";
 
 export type TrackActionType =
   | "new_connection"
@@ -28,6 +31,10 @@ type TrackBookmarkResult = TrackResult<{
   url: string;
   caption: string;
 }>;
+type TrackBookmarkResultTwitter = TrackResult<{
+  url: string;
+  tweetsMap: Record<string, string[]>;
+}>;
 
 interface ExtensionState {
   // Degree Highlighter State
@@ -51,19 +58,13 @@ interface ExtensionState {
   trackBookmarkError: Error | null;
 
   // Track Bookmark
-  trackBookmark: ({
-    url,
-    caption,
-  }: {
-    url: string;
-    caption: string;
-  }) => Promise<void>;
+  trackBookmark: () => Promise<void>;
 }
 
 function getFormAction(actionType: TrackActionType) {
   switch (actionType) {
-    case "add_connection":
-      return "Add%20Connection";
+    case "new_connection":
+      return "New%20Connection";
     case "dtm":
       return "DTM";
     case "birthday":
@@ -238,12 +239,32 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       const action = "track_bookmark";
       const response = (await browser.tabs.sendMessage(tab.id, {
         action,
-      })) as TrackBookmarkResult;
-      console.log("trackBookmark", { response });
+      })) as TrackBookmarkResult | TrackBookmarkResultTwitter;
+      bookmarks2ActionLogger.debug("trackBookmark", { response });
 
       if (response?.success) {
         if (response?.data) {
           set({ trackBookmarkStatus: `Bookmark tracked` });
+          if (
+            "tweetsMap" in response?.data &&
+            Object.keys(response?.data?.tweetsMap).length > 0
+          ) {
+            if (
+              confirm(
+                `Do you want to track tweets from ${Object.keys(response?.data?.tweetsMap).join(" & ")} accounts?`,
+              )
+            ) {
+              // https://app.youform.com/forms/f6gffax5
+              window.open(
+                `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
+                "_blank",
+              );
+            }
+            return;
+          }
+          bookmarks2ActionLogger.debug("trackBookmark", {
+            youFormUrl: `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
+          });
           // https://app.youform.com/forms/f6gffax5
           window.open(
             `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
@@ -262,7 +283,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       }
     } catch (err) {
       const error = err as Error;
-      console.error("Error:", error);
+      bookmarks2ActionLogger.error("trackBookmark", error);
       set({
         trackBookmarkStatus: `Error communicating with page: ${error.message}`,
         trackBookmarkError: error,
