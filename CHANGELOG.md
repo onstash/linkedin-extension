@@ -1,5 +1,11 @@
 # linkedin-extension
 
+## 0.5.0
+
+### Minor Changes
+
+- 69cb38d: feat(extension): add context menu tracking & refine content parsing
+
 ## 0.4.0
 
 ### Minor Changes
