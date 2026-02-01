@@ -12,6 +12,6 @@ export default defineConfig({
     action: {
       default_title: "LinkedIn++",
     },
-    permissions: ["tabs"],
+    permissions: ["tabs", "contextMenus"],
   },
 });

@@ -1,48 +1,9 @@
 import {
   contentScriptLogger,
   linkedInDegreeHighlightingLogger,
+  bookmarks2ActionLogger,
 } from "@/lib/logger";
 import { highlight1stAnd2ndDegreeConnections } from "./popup/linkedin-content";
-
-// Configuration constants
-const classNameToQuerySelector = (val: string) =>
-  `.${val.split(" ").join(".")}`;
-
-const CONFIG = {
-  SELECTORS: {
-    DEGREE_BADGE: classNameToQuerySelector(
-      "_8fc3671d dcfb0537 a48f26ff _4560f919 _672e5870",
-    ),
-    CONTAINER: classNameToQuerySelector(
-      "e0744685 cba660dd bbfbb7c5 f0150480 c11ce368 b9adc9a2 _6a90e9a7 _13057166 _9b4be851 d6ae496c",
-    ),
-  },
-  DEGREE: {
-    "1st": {
-      DEGREE_TEXT: "1st",
-      PARENT_LEVELS: 4,
-      HIGHLIGHT_STYLE: {
-        border: "2px solid green",
-        backgroundColor: "rgba(0, 255, 0, 0.1)",
-      },
-    },
-    "2nd": {
-      DEGREE_TEXT: "2nd",
-      PARENT_LEVELS: 4,
-      HIGHLIGHT_STYLE: {
-        border: "2px solid yellow",
-        backgroundColor: "rgba(255, 255, 0, 0.1)",
-      },
-    },
-  },
-  DEBUG: true,
-};
-
-const CONFIG2 = {
-  SELECTORS: {
-    CONTAINER: "[data-view-name='view-likers']",
-  },
-};
 
 function trackProfile() {
   const fullName = document.querySelector<HTMLElement>("a > h1");
@@ -76,11 +37,16 @@ type TrackBookmarkResult = TrackResult<{
   caption: string;
 }>;
 
+type TrackBookmarkResultTwitter = TrackResult<{
+  url: string;
+  tweetsMap: Record<string, string[]>;
+}>;
+
 function trackBookmarkInstagram(): TrackBookmarkResult {
   const url = window.location.href;
   try {
     const h1Tags = Array.from(document.querySelectorAll("h1"));
-    console.log("trackBookmarkInstagram", { h1Tags });
+    bookmarks2ActionLogger.debug("trackBookmarkInstagram", { h1Tags });
 
     if (!h1Tags.length) {
       const span = document.querySelector(
@@ -89,7 +55,7 @@ function trackBookmarkInstagram(): TrackBookmarkResult {
             .split(" ")
             .join("."),
       );
-      console.log("trackBookmarkInstagram", { span });
+      bookmarks2ActionLogger.debug("trackBookmarkInstagram", { span });
       if (!span) {
         //
         return {
@@ -100,26 +66,35 @@ function trackBookmarkInstagram(): TrackBookmarkResult {
           },
         };
       }
+      const captionFromSpan =
+        "innerText" in span ? ((span.innerText as string) ?? "") : "";
+      bookmarks2ActionLogger.debug("trackBookmarkInstagram", {
+        url,
+        captionFromSpan,
+      });
       return {
         success: true,
         data: {
           url,
-          caption:
-            "innerText" in span ? ((span.innerText as string) ?? "") : "",
+          caption: captionFromSpan,
         },
       };
     }
-    const caption =
+    const captionFromH1Tags =
       h1Tags.length > 1 ? h1Tags[1].innerText : h1Tags[0].innerText;
+    bookmarks2ActionLogger.debug("trackBookmarkInstagram", {
+      url,
+      captionFromH1Tags,
+    });
     return {
       success: true,
       data: {
         url,
-        caption,
+        caption: captionFromH1Tags,
       },
     };
   } catch (err: unknown) {
-    console.error("trackBookmarkInstagram", err);
+    bookmarks2ActionLogger.error("trackBookmarkInstagram", err);
     //
     return {
       success: true,
@@ -131,53 +106,59 @@ function trackBookmarkInstagram(): TrackBookmarkResult {
   }
 }
 
-function trackBookmarkTwitter() {
+function trackBookmarkTwitter(): TrackBookmarkResultTwitter {
+  const url = window.location.href;
   try {
-    const url = window.location.href;
-    const tweets = Array.from(
-      document.querySelectorAll("[data-testid='tweetText']"),
+    const tweetsMap: Record<string, string[]> = {};
+    Array.from(document.querySelectorAll("[data-testid='tweet']")).forEach(
+      (tweet) => {
+        const userNameNode = tweet.querySelector("[data-testid='User-Name']");
+        let userName = (
+          userNameNode && "innerText" in userNameNode
+            ? userNameNode.innerText
+            : ""
+        ) as string;
+        if (userName.includes("\n")) {
+          userName = userName.split("\n")[0];
+        }
+        const userProfileLinkNode = tweet.querySelector("a[role='link']");
+        const userProfileLink = (
+          userProfileLinkNode && "href" in userProfileLinkNode
+            ? userProfileLinkNode.href
+            : ""
+        ) as string;
+        const key = `${userName}-${userProfileLink}`;
+        const tweetTextNode = tweet.querySelector("[data-testid='tweetText']");
+        const tweetText = (
+          tweetTextNode && "innerText" in tweetTextNode
+            ? tweetTextNode.innerText
+            : ""
+        ) as string;
+        if (tweetsMap[key]) {
+          tweetsMap[key].push(tweetText);
+        } else {
+          tweetsMap[key] = [tweetText];
+        }
+      },
     );
-    const tweetsCount = tweets.length;
-    if (!tweetsCount) {
-      return {
-        success: false,
-        issues: [{ message: "Content not found" }],
-      };
-    }
-    if (tweetsCount > 1) {
-      // return {
-      //   success: false,
-      //   issues: [{ message: "Multiple tweets found" }],
-      // };
-      return {
-        success: true,
-        data: {
-          url,
-          caption: "",
-        },
-      };
-    }
-
-    console.log("trackBookmarkTwitter", { tweets });
-    // @ts-ignore
-    const caption = tweets[0].innerText;
-    if (!caption) {
-      return {
-        success: false,
-        issues: [{ message: "Content not found" }],
-      };
-    }
+    const caption = Object.values(tweetsMap).join("\n\n");
+    bookmarks2ActionLogger.debug("trackBookmarkTwitter", {
+      tweetsMap,
+      caption,
+    });
     return {
       success: true,
       data: {
         url,
-        caption,
+        tweetsMap,
       },
     };
   } catch (err: unknown) {
+    const error = err as Error;
+    bookmarks2ActionLogger.error("trackBookmarkTwitter", error);
     return {
       success: false,
-      issues: [{ message: (err as Error).message }],
+      issues: [{ message: error.message }],
     };
   }
 }

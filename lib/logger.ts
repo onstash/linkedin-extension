@@ -34,11 +34,11 @@ export class Logger {
 
   private formatMessage(level: LogLevel, message: unknown): unknown[] {
     const timestamp = new Date().toISOString();
-    // const serialized =
-    // typeof message === "string" ? message : JSON.stringify(message, null, 2);
+    const serialized =
+      typeof message === "string" ? message : JSON.stringify(message, null, 2);
 
-    return [`[${timestamp}] [${level}] [${this.namespace}]`, message];
-    // return `[${timestamp}] [${level}] [${this.namespace}] ${serialized}`;
+    // return [`[${timestamp}] [${level}] [${this.namespace}]`, message];
+    return [`[${timestamp}] [${level}] [${this.namespace}] ${serialized}`];
   }
 
   private log(level: LogLevel, message: unknown): void {
@@ -89,6 +89,12 @@ export const linkedInDegreeHighlightingLogger = Logger.createLogger({
 
 export const contentScriptLogger = Logger.createLogger({
   namespace: "ContentScript",
+  level: "DEBUG",
+  enableConsoleLog: true,
+});
+
+export const bookmarks2ActionLogger = Logger.createLogger({
+  namespace: "Bookmarks2Action",
   level: "DEBUG",
   enableConsoleLog: true,
 });
