@@ -40,8 +40,12 @@ function highlightConnections(): number {
 
     peopleWhoReacted.forEach((person) => {
       try {
-        const text = (person as HTMLAnchorElement).innerText;
+        // LinkedIn uses specific internal containers for text; target them directly
+        const metadataContainer = person.querySelector("._77e1d0b9._5bee12f6._62238051._5ffdfd5b._35ad0440.fc9fd121._8bcefdb6");
+        const text = metadataContainer?.innerText ?? (person as HTMLElement).innerText;
+
         linkedInDegreeHighlightingLogger.debug("[contentScript] person text", text);
+        
         // More robust matching: Look for "1st" or "2nd" followed by "degree"
         const match = text.match(/(1st|2nd) degree/);
         if (!match) return;
@@ -49,9 +53,10 @@ function highlightConnections(): number {
         const connectionDegree = match[1] as "1st" | "2nd";
         const anchor = person as HTMLAnchorElement;
 
-        // Visual Highlighting
-        const color = connectionDegree === "1st" ? "#0077b6ff" : "#aab600ff";
-        anchor.style.border = `5px solid ${color}`;
+        // Force Visual Highlighting using CSS priority
+        const color = connectionDegree === "1st" ? "#0077b6" : "#aab600";
+        anchor.style.setProperty("border", `5px solid ${color}`, "important");
+        anchor.style.setProperty("box-sizing", "border-box", "important");
         highlightedCount++;
 
         // Add custom identifier
