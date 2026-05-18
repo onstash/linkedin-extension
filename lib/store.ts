@@ -37,9 +37,17 @@ type TrackBookmarkResultTwitter = TrackResult<{
   tweetsMap: Record<string, string[]>;
 }>;
 
+export const HIGHLIGHT_STATES = {
+  IDLE: "IDLE",
+  WAITING: "WAITING",
+  ACTIVE: "ACTIVE",
+} as const;
+
+export type HighlightState = keyof typeof HIGHLIGHT_STATES;
+
 interface ExtensionState {
   // Degree Highlighter State
-  isHighlighting: boolean;
+  highlightState: HighlightState;
   highlightStatus: string;
   highlightError: Error | null;
 
@@ -79,7 +87,7 @@ function getFormAction(actionType: TrackActionType) {
 
 export const useExtensionStore = create<ExtensionState>((set, get) => ({
   // Initial State - Highlighting
-  isHighlighting: false,
+  highlightState: HighlightState,
   highlightStatus: "Ready",
   highlightError: null,
 
@@ -116,9 +124,11 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
 
   // Toggle highlighting on/off
   toggleHighlightingV2: async () => {
-    const { isHighlighting } = get();
+    const { highlightState } = get();
+    const isHighlighting = highlightState !== HIGHLIGHT_STATES.IDLE;
     linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
       isHighlighting,
+      highlightState,
     });
 
     try {
@@ -126,16 +136,8 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
         active: true,
         currentWindow: true,
       });
-      linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
-        isHighlighting,
-        tab,
-      });
 
       if (!tab?.id) {
-        linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
-          isHighlighting,
-          tab,
-        });
         set({ highlightStatus: "No active tab found" });
         return;
       }
@@ -144,27 +146,20 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       const action = isHighlighting
         ? "degree_highlight_stop"
         : "degree_highlight_start";
-      linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
-        isHighlighting,
-        action,
-      });
-      const response = await browser.tabs.sendMessage(tab.id, { action });
-      linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
-        isHighlighting,
-        action,
-        response,
-      });
 
+      const response = await browser.tabs.sendMessage(tab.id, { action });
+      
       if (response?.success) {
-        set({ isHighlighting: !isHighlighting });
-        if (action === "degree_highlight_start") {
-          if (response.found) {
-            set({ highlightStatus: `Highlighted ${response.count} connections` });
-          } else {
-            set({ highlightStatus: "Waiting for reactions modal..." });
-          }
+        if (action === "degree_highlight_stop") {
+          set({ 
+            highlightState: HIGHLIGHT_STATES.IDLE,
+            highlightStatus: `Cleaned up ${response.cleaned ?? 0} highlights` 
+          });
         } else {
-          set({ highlightStatus: `Cleaned up ${response.cleaned ?? 0} highlights` });
+          set({ 
+            highlightState: response.found ? HIGHLIGHT_STATES.ACTIVE : HIGHLIGHT_STATES.WAITING,
+            highlightStatus: response.found ? `Highlighted ${response.count} connections` : "Waiting for reactions modal..." 
+          });
         }
       } else {
         set({
@@ -174,10 +169,6 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       }
     } catch (err) {
       const error = err as Error;
-      linkedInDegreeHighlightingLogger.error("toggleHighlighting", {
-        isHighlighting,
-        error,
-      });
       set({
         highlightStatus: "Error communicating with page",
         highlightError: error,

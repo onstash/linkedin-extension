@@ -8,16 +8,18 @@ import {
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
-import { useExtensionStore } from "@/lib/store";
+import { useExtensionStore, HIGHLIGHT_STATES } from "@/lib/store";
 
 export function DegreeHighlighter() {
   const {
-    isHighlighting,
+    highlightState,
     highlightStatus,
     highlightError,
     checkHighlightStatus,
     toggleHighlightingV2,
   } = useExtensionStore();
+
+  const isHighlighting = highlightState !== HIGHLIGHT_STATES.IDLE;
 
   // Check status on mount
   useEffect(() => {
