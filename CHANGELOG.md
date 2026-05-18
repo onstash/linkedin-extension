@@ -1,12 +1,12 @@
 # linkedin-extension
 
-## 0.5.5
+## 0.5.6
 
 ### Patch Changes
 
-- 6a143d5: Fix LinkedIn highlighting: target specific metadata container and enforce styles using !important.
+- f5897f0: Fix LinkedIn highlighting: enhance discovery observer to specifically trigger on liker node insertion.
 
-## 0.5.4
+## 0.5.5
 
 ## 0.5.3
 
