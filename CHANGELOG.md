@@ -1,10 +1,12 @@
 # linkedin-extension
 
-## 0.5.4
+## 0.5.5
 
 ### Patch Changes
 
-- 0a8638b, 2f94d44, a273398: Fix LinkedIn highlighting: added state machine, robust parsing (Regex), fix messaging timeout, and UI 'waiting' states.
+- 6a143d5: Fix LinkedIn highlighting: target specific metadata container and enforce styles using !important.
+
+## 0.5.4
 
 ## 0.5.3
 
