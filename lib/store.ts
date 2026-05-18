@@ -87,7 +87,7 @@ function getFormAction(actionType: TrackActionType) {
 
 export const useExtensionStore = create<ExtensionState>((set, get) => ({
   // Initial State - Highlighting
-  highlightState: HighlightState,
+  highlightState: HIGHLIGHT_STATES.IDLE,
   highlightStatus: "Ready",
   highlightError: null,
 
