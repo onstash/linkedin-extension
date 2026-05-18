@@ -6,6 +6,24 @@
 
 - 0a8638b, 2f94d44, a273398: Fix LinkedIn highlighting: added state machine, robust parsing (Regex), fix messaging timeout, and UI 'waiting' states.
 
+## 0.5.3
+
+### Patch Changes
+
+- 10f148d: Bump version.
+
+## 0.5.2
+
+### Patch Changes
+
+- 2f94d44: Refactor to state machine.
+
+## 0.5.1
+
+### Patch Changes
+
+- 73f8430: Resolve highlighting race conditions and parsing.
+
 ## 0.5.0
 
 ### Minor Changes
