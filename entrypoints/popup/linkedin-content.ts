@@ -148,10 +148,33 @@ export function highlight1stAnd2ndDegreeConnections(
       attachListObserver();
 
       if (!discoveryObserver) {
-        discoveryObserver = new MutationObserver(() => {
-          highlightConnections();
+        linkedInDegreeHighlightingLogger.debug(
+          "[contentScript] Starting Discovery Observer",
+        );
+        discoveryObserver = new MutationObserver((mutations) => {
+          // Look for added liker elements specifically
+          const hasLikers = Array.from(mutations).some((m) =>
+            Array.from(m.addedNodes).some(
+              (node) =>
+                node instanceof Element &&
+                (node.matches("a[data-view-name='view-likers']") ||
+                  node.querySelector("a[data-view-name='view-likers']")),
+            ),
+          );
+
+          if (hasLikers) {
+            linkedInDegreeHighlightingLogger.debug(
+              "[contentScript] Discovery Observer triggered - Liker found",
+            );
+            highlightConnections();
+            attachListObserver();
+          }
         });
-        discoveryObserver.observe(document.body, { childList: true, subtree: true });
+
+        discoveryObserver.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
       }
       return count;
     }
