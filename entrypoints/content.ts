@@ -2,15 +2,29 @@ import {
   contentScriptLogger,
   linkedInDegreeHighlightingLogger,
   bookmarks2ActionLogger,
+  linkedInLogger,
 } from "@/lib/logger";
 import { highlight1stAnd2ndDegreeConnections } from "./popup/linkedin-content";
 
 function trackProfile() {
-  const fullName = document.querySelector<HTMLElement>("a > h1");
+  linkedInLogger.debug("trackProfile");
+  let fullName = document.querySelector<HTMLElement>("a > h1");
+  linkedInLogger.debug("trackProfile", { fullName, version: 1 });
   if (!fullName) {
-    return { success: false, issues: [{ message: "Full name not found" }] };
+    fullName = document.querySelector<HTMLElement>(
+      "div[role='button'] > div > h2",
+    );
+    linkedInLogger.debug("trackProfile", { fullName, version: 2 });
+    if (!fullName) {
+      return { success: false, issues: [{ message: "Full name not found" }] };
+    }
   }
   const profileLink = window.location.href;
+  linkedInLogger.debug("trackProfile", {
+    fullName: fullName.innerText,
+    profileLink,
+    version: 3,
+  });
   return {
     success: true,
     data: {
@@ -213,7 +227,7 @@ export default defineContentScript({
         case "degree_highlight_status":
           sendResponse({ isActive: false });
           break;
-        case "track_profile_add_connection":
+        case "track_profile_new_connection":
         case "track_profile_dtm":
         case "track_profile_birthday":
         case "track_profile_work_anniversary":

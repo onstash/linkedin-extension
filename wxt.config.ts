@@ -7,6 +7,10 @@ export default defineConfig({
   outDir: "dist",
   vite: () => ({
     plugins: [tailwindcss()],
+    server: {
+      port: 3001,
+      host: "127.0.0.1",
+    },
   }),
   manifest: {
     action: {

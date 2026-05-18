@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   linkedInDegreeHighlightingLogger,
   bookmarks2ActionLogger,
+  linkedInLogger,
 } from "./logger";
 
 export type TrackActionType =
@@ -64,7 +65,7 @@ interface ExtensionState {
 function getFormAction(actionType: TrackActionType) {
   switch (actionType) {
     case "new_connection":
-      return "New%20Connection";
+      return "Add%20Connection";
     case "dtm":
       return "DTM";
     case "birthday":
@@ -182,6 +183,9 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
 
   // Track profile for new connections or DTM
   trackProfile: async (actionType: TrackActionType) => {
+    linkedInLogger.debug("trackProfile", {
+      actionType,
+    });
     try {
       const [tab] = await browser.tabs.query({
         active: true,
@@ -190,15 +194,27 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
 
       if (!tab?.id) {
         set({ trackProfileStatus: "No active tab found" });
+        linkedInLogger.debug("trackProfile", {
+          actionType,
+          tab,
+        });
         return;
       }
 
       set({ trackProfileError: null });
       const action = `track_profile_${actionType}`;
+      linkedInLogger.debug("trackProfile", {
+        actionType,
+        action,
+      });
       const response = (await browser.tabs.sendMessage(tab.id, {
         action,
       })) as TrackProfileResult;
-
+      linkedInLogger.debug("trackProfile", {
+        actionType,
+        action,
+        response,
+      });
       if (response?.success) {
         set({ trackProfileStatus: `Profile tracked - ${actionType}` });
         const formAction = getFormAction(actionType);
@@ -214,7 +230,10 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       }
     } catch (err) {
       const error = err as Error;
-      console.error("Error:", error);
+      linkedInLogger.error("trackProfile", {
+        actionType,
+        error,
+      });
       set({
         trackProfileStatus: "Error communicating with page",
         trackProfileError: error,

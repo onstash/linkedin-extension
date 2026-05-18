@@ -98,3 +98,9 @@ export const bookmarks2ActionLogger = Logger.createLogger({
   level: "DEBUG",
   enableConsoleLog: true,
 });
+
+export const linkedInLogger = Logger.createLogger({
+  namespace: "LinkedIn",
+  level: "DEBUG",
+  enableConsoleLog: true,
+});
