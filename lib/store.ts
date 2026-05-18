@@ -158,9 +158,13 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       if (response?.success) {
         set({ isHighlighting: !isHighlighting });
         if (action === "degree_highlight_start") {
-          set({ highlightStatus: `Highlighted ${response.count} connections` });
+          if (response.found) {
+            set({ highlightStatus: `Highlighted ${response.count} connections` });
+          } else {
+            set({ highlightStatus: "Waiting for reactions modal..." });
+          }
         } else {
-          set({ highlightStatus: `Cleaned up ${response.cleaned} highlights` });
+          set({ highlightStatus: `Cleaned up ${response.cleaned ?? 0} highlights` });
         }
       } else {
         set({

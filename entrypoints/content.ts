@@ -201,12 +201,11 @@ export default defineContentScript({
               action: "degree_highlight_start",
             },
           );
-          highlight1stAnd2ndDegreeConnections("start");
+          const count = highlight1stAnd2ndDegreeConnections("start");
           sendResponse({
             success: true,
-            data: {
-              action: "degree_highlight_start",
-            },
+            count,
+            found: count > 0,
           });
           break;
         case "degree_highlight_stop":
@@ -219,9 +218,7 @@ export default defineContentScript({
           highlight1stAnd2ndDegreeConnections("stop");
           sendResponse({
             success: true,
-            data: {
-              action: "degree_highlight_stop",
-            },
+            cleaned: 0,
           });
           break;
         case "degree_highlight_status":
