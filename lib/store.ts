@@ -265,70 +265,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       window.open(`https://wa.me/${whatsAppNumber}`, "_blank");
     }
   },
-    try {
-      const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
 
-      if (!tab?.id) {
-        set({ trackBookmarkStatus: "No active tab found" });
-        return;
-      }
-
-      set({ trackBookmarkError: null });
-      const action = "track_bookmark";
-      const response = (await browser.tabs.sendMessage(tab.id, {
-        action,
-      })) as TrackBookmarkResult | TrackBookmarkResultTwitter;
-      bookmarks2ActionLogger.debug("trackBookmark", { response });
-
-      if (response?.success) {
-        if (response?.data) {
-          set({ trackBookmarkStatus: `Bookmark tracked` });
-          if (
-            "tweetsMap" in response?.data &&
-            Object.keys(response?.data?.tweetsMap).length > 0
-          ) {
-            if (
-              confirm(
-                `Do you want to track tweets from ${Object.keys(response?.data?.tweetsMap).join(" & ")} accounts?`,
-              )
-            ) {
-              // https://app.youform.com/forms/f6gffax5
-              window.open(
-                `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
-                "_blank",
-              );
-            }
-            return;
-          }
-          bookmarks2ActionLogger.debug("trackBookmark", {
-            youFormUrl: `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
-          });
-          // https://app.youform.com/forms/f6gffax5
-          window.open(
-            `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
-            "_blank",
-          );
-        } else {
-          set({ trackBookmarkStatus: `Bookmark tracked` });
-        }
-      } else {
-        const errorMessage = `Error communicating with page: ${response.issues.map((issue) => issue.message).join(", ")}`;
-        alert(errorMessage);
-        set({
-          trackBookmarkStatus: errorMessage,
-          trackBookmarkError: new Error(errorMessage),
-        });
-      }
-    } catch (err) {
-      const error = err as Error;
-      bookmarks2ActionLogger.error("trackBookmark", error);
-      set({
-        trackBookmarkStatus: `Error communicating with page: ${error.message}`,
-        trackBookmarkError: error,
-      });
-    }
-  },
+  // Track bookmark
+  trackBookmark: async () => {
 }));
