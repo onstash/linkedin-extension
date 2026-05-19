@@ -30,9 +30,8 @@ export function App() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {isLinkedIn && <DegreeHighlighter />}
+          <DegreeHighlighter />
           {isLinkedIn && <TrackProfile />}
-          {isGoogleContacts && <DegreeHighlighter />}
         </CardContent>
       </Card>
     );
