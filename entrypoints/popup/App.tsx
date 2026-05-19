@@ -33,7 +33,7 @@ export function App() {
         <CardContent className="p-0">
           <DegreeHighlighter />
           {isLinkedIn && <TrackProfile />}
-          <WhatsAppMessenger />
+          {isGoogleContacts && <WhatsAppMessenger />}
         </CardContent>
       </Card>
     );
