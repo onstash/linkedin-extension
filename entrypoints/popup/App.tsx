@@ -5,6 +5,7 @@ import { DegreeHighlighter } from "./DegreeHighlighter";
 import { WhatsAppMessenger } from "./WhatsAppMessenger";
 import { TrackProfile } from "./TrackProfile";
 import { TrackBookmarks2Action } from "./Bookmarks2Action";
+import { appLogger } from "@/lib/logger";
 
 export function App() {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
@@ -21,13 +22,14 @@ export function App() {
   }
   const isLinkedIn = currentUrl.includes("linkedin.com");
   const isGoogleContacts = currentUrl.includes("contacts.google.com");
-  
+  appLogger.debug({ isLinkedIn, isGoogleContacts });
+
   if (isLinkedIn || isGoogleContacts) {
     return (
       <Card className="w-[300px] border-0 shadow-none">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-             {isLinkedIn ? "LinkedIn++" : "Contacts++"}
+            {isLinkedIn ? "LinkedIn++" : "Contacts++"}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">

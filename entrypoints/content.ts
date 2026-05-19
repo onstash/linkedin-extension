@@ -5,18 +5,42 @@ import {
   linkedInLogger,
 } from "@/lib/logger";
 import { highlight1stAnd2ndDegreeConnections } from "./popup/linkedin-content";
+import { appLogger } from "@/lib/logger";
 
 function getWhatsAppNumber(): { success: boolean; phoneNumber?: string } {
   try {
-    const link = document.querySelector<HTMLAnchorElement>("a.W7Nbnf");
-    if (!link || !link.href) {
-      return { success: false };
+    appLogger.debug("[contentScript] getWhatsAppNumber");
+    const links = document.querySelectorAll<HTMLAnchorElement>("a.W7Nbnf");
+    appLogger.debug("[contentScript] getWhatsAppNumber", {
+      links,
+    });
+    for (const link of links) {
+      appLogger.debug("[contentScript] getWhatsAppNumber", {
+        link,
+      });
+      if (!link || !link.href) {
+        appLogger.debug("[contentScript] getWhatsAppNumber", {
+          link,
+          href: link?.href,
+          success: false,
+        });
+        return { success: false };
+      }
+      if (!link.href.startsWith("tel:")) {
+        continue;
+      }
+      const url = new URL(link.href);
+      const phoneNumber = url.pathname;
+      appLogger.debug("[contentScript] getWhatsAppNumber", {
+        phoneNumber,
+      });
+      return { success: true, phoneNumber };
     }
-    const url = new URL(link.href);
-    const parts = url.pathname.split("/");
-    const id = parts[parts.length - 1];
-    return { success: true, phoneNumber: id };
+    return { success: false };
   } catch (err) {
+    appLogger.debug("[contentScript] getWhatsAppNumber", {
+      err,
+    });
     return { success: false };
   }
 }

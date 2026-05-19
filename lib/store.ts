@@ -3,6 +3,7 @@ import {
   linkedInDegreeHighlightingLogger,
   bookmarks2ActionLogger,
   linkedInLogger,
+  appLogger,
 } from "./logger";
 
 export type TrackActionType =
@@ -122,7 +123,9 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       });
 
       set({
-        highlightState: response?.isActive ? HIGHLIGHT_STATES.ACTIVE : HIGHLIGHT_STATES.IDLE,
+        highlightState: response?.isActive
+          ? HIGHLIGHT_STATES.ACTIVE
+          : HIGHLIGHT_STATES.IDLE,
         highlightStatus: response?.isActive ? "Highlighting active" : "Ready",
       });
     } catch {
@@ -134,7 +137,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
   toggleHighlightingV2: async () => {
     const { highlightState } = get();
     const isHighlighting = highlightState !== HIGHLIGHT_STATES.IDLE;
-    
+
     try {
       const [tab] = await browser.tabs.query({
         active: true,
@@ -152,17 +155,21 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
         : "degree_highlight_start";
 
       const response = await browser.tabs.sendMessage(tab.id, { action });
-      
+
       if (response?.success) {
         if (action === "degree_highlight_stop") {
-          set({ 
+          set({
             highlightState: HIGHLIGHT_STATES.IDLE,
-            highlightStatus: `Cleaned up ${response.cleaned ?? 0} highlights` 
+            highlightStatus: `Cleaned up ${response.cleaned ?? 0} highlights`,
           });
         } else {
-          set({ 
-            highlightState: response.found ? HIGHLIGHT_STATES.ACTIVE : HIGHLIGHT_STATES.WAITING,
-            highlightStatus: response.found ? `Highlighted ${response.count} connections` : "Waiting for reactions modal..." 
+          set({
+            highlightState: response.found
+              ? HIGHLIGHT_STATES.ACTIVE
+              : HIGHLIGHT_STATES.WAITING,
+            highlightStatus: response.found
+              ? `Highlighted ${response.count} connections`
+              : "Waiting for reactions modal...",
           });
         }
       } else {
@@ -205,7 +212,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       const response = (await browser.tabs.sendMessage(tab.id, {
         action,
       })) as TrackProfileResult;
-      
+
       if (response?.success) {
         set({ trackProfileStatus: `Profile tracked - ${actionType}` });
         const formAction = getFormAction(actionType);
@@ -234,15 +241,30 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
 
   getWhatsAppNumber: async () => {
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      appLogger.debug("getWhatsAppNumber", {
+        tab,
+      });
       if (!tab?.id) return;
-      const response = await browser.tabs.sendMessage(tab.id, { action: "get_whatsapp_number" });
+      const response = await browser.tabs.sendMessage(tab.id, {
+        action: "get_whatsapp_number",
+      });
+      appLogger.debug("getWhatsAppNumber", {
+        response,
+      });
       if (response?.success) {
         set({ whatsAppNumber: response.phoneNumber ?? null });
       } else {
         set({ whatsAppNumber: null });
       }
     } catch (err) {
+      const error = err as Error;
+      appLogger.error("getWhatsAppNumber", {
+        error,
+      });
       set({ whatsAppNumber: null });
     }
   },

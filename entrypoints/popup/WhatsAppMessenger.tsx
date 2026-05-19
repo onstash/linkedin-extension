@@ -2,11 +2,15 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
 import { useExtensionStore } from "@/lib/store";
 import { useEffect } from "react";
+import { appLogger } from "@/lib/logger";
 
 export function WhatsAppMessenger() {
-  const { whatsAppNumber, getWhatsAppNumber, openWhatsApp } = useExtensionStore();
+  appLogger.debug("WhatsAppMessenger");
+  const { whatsAppNumber, getWhatsAppNumber, openWhatsApp } =
+    useExtensionStore();
 
   useEffect(() => {
+    appLogger.debug("WhatsAppMessenger useEffect");
     getWhatsAppNumber();
   }, []);
 
