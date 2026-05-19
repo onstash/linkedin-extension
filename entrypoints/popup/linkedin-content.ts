@@ -47,7 +47,7 @@ function highlightConnections(): number {
         linkedInDegreeHighlightingLogger.debug("[contentScript] person text content", text);
 
         // Match 1st or 2nd degree
-        const match = text.match(/(1st|2nd) degree/);
+        const match = text.match(/(1st|2nd)$/);
         if (!match) return;
 
         const connectionDegree = match[1] as "1st" | "2nd";
