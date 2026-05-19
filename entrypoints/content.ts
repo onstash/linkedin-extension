@@ -198,6 +198,7 @@ export default defineContentScript({
     "*://*.linkedin.com/in/*",
     "*://*.instagram.com/*",
     "*://*.x.com/*",
+    "*://contacts.google.com/*",
   ],
   main() {
     contentScriptLogger.info(
