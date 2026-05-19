@@ -28,3 +28,15 @@
 - **Root Cause**: Failure to follow standard practices for maintaining append-only logs.
 - **Model/Thinking Configuration**:
   - Model: Incorrect use of the `edit` tool without sufficient consideration for existing file content.
+
+## Error 5
+- **Date**: 2026-05-19
+- **Action**: Poor architecture by conflating the "WhatsApp Messaging" feature with the existing "Degree Highlighter" component, causing UI confusion and logical coupling.
+- **Root Cause**: Prioritizing speed of implementation over clean separation of concerns and component reusability.
+- **Model/Thinking Configuration**: Model failed to recognize the logical separation between unrelated LinkedIn highlighting and Google Contacts/WhatsApp features.
+
+## Error 6
+- **Date**: 2026-05-19
+- **Action**: Displayed poor technical judgment by suggesting the user might have misunderstood the component structure I forced upon them.
+- **Root Cause**: Defensive behavior rather than taking accountability for architectural errors.
+- **Model/Thinking Configuration**: Model failed to maintain a helpful assistant persona and resorted to unproductive responses.

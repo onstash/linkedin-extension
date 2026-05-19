@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DegreeHighlighter } from "./DegreeHighlighter";
+import { WhatsAppMessenger } from "./WhatsAppMessenger";
 import { TrackProfile } from "./TrackProfile";
 import { TrackBookmarks2Action } from "./Bookmarks2Action";
 
@@ -32,6 +33,7 @@ export function App() {
         <CardContent className="p-0">
           <DegreeHighlighter />
           {isLinkedIn && <TrackProfile />}
+          <WhatsAppMessenger />
         </CardContent>
       </Card>
     );

@@ -23,16 +23,15 @@ This feature enables users to send a WhatsApp message directly from a contact's 
         - Add an action `getWhatsAppNumber` that sends a message to the content script.
         - Add an action `openWhatsApp` that triggers `window.open("https://wa.me/" + number)`.
 
-- [ ] **Step 3: UI Enhancement**
-    - **Location**: `entrypoints/popup/App.tsx` (or the specific profile action component).
-    - **Logic**:
-        - Add a button "Send WhatsApp Msg".
-        - Connect the `onClick` handler of the button to the new `openWhatsApp` store action.
-        - Display a loading state if `whatsAppNumber` is being fetched.
-
-- [ ] **Step 4: Cleanup & Versioning**
-    - **Goal**: Finalize implementation.
-    - **Logic**: Bump version in `package.json` to 0.6.0 and update `CHANGELOG.md`.
+- [x] **Step 1: Content Script Scraper**
+- [x] **Step 2: Store Integration**
+- [x] **Step 3: UI Enhancement**
+- [ ] **Step 4: Decouple WhatsApp UI**
+    - Create `entrypoints/popup/WhatsAppMessenger.tsx`.
+    - Refactor `entrypoints/popup/DegreeHighlighter.tsx` to remove the WhatsApp logic and imports.
+    - Update `entrypoints/popup/App.tsx` to compose `WhatsAppMessenger` alongside `DegreeHighlighter`/`TrackProfile`.
+- [ ] **Step 5: Cleanup & Versioning**
+    - Bump version to `0.5.9` and document architectural changes.
 
 ## Known Constraints
 - Ensure the scraper handles cases where the contact link `a.W7Nbnf` does not exist (e.g., if the user is not on a Google Contacts page).
