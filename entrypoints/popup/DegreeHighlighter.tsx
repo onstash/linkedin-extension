@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import {
   Play,
   Square,
   AlertCircle,
   CheckCircle2,
   Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { useExtensionStore, HIGHLIGHT_STATES } from "@/lib/store";
 
@@ -17,13 +18,17 @@ export function DegreeHighlighter() {
     highlightError,
     checkHighlightStatus,
     toggleHighlightingV2,
+    whatsAppNumber,
+    getWhatsAppNumber,
+    openWhatsApp,
   } = useExtensionStore();
 
   const isHighlighting = highlightState !== HIGHLIGHT_STATES.IDLE;
 
-  // Check status on mount
+  // Check status and whatsapp number on mount
   useEffect(() => {
     checkHighlightStatus();
+    getWhatsAppNumber();
   }, []);
 
   return (
@@ -73,6 +78,18 @@ export function DegreeHighlighter() {
           </p>
         )}
       </CardContent>
+
+      {whatsAppNumber && (
+        <CardFooter>
+          <Button
+            onClick={openWhatsApp}
+            variant="outline"
+            className="w-full gap-2 border-green-500 text-green-600 hover:bg-green-50"
+          >
+            <MessageSquare className="h-4 w-4" /> Send WhatsApp Msg
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
