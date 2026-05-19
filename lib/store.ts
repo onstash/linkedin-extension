@@ -68,6 +68,11 @@ interface ExtensionState {
 
   // Track Bookmark
   trackBookmark: () => Promise<void>;
+
+  // WhatsApp
+  whatsAppNumber: string | null;
+  getWhatsAppNumber: () => Promise<void>;
+  openWhatsApp: () => void;
 }
 
 function getFormAction(actionType: TrackActionType) {
@@ -98,6 +103,9 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
   // Initial State - Track Bookmark
   trackBookmarkStatus: "Ready",
   trackBookmarkError: null,
+
+  // Initial State - WhatsApp
+  whatsAppNumber: null,
 
   // Check current status from content script
   checkHighlightStatus: async () => {
@@ -236,8 +244,27 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
     }
   },
 
-  // Track bookmark
-  trackBookmark: async () => {
+  getWhatsAppNumber: async () => {
+    try {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.id) return;
+      const response = await browser.tabs.sendMessage(tab.id, { action: "get_whatsapp_number" });
+      if (response?.success) {
+        set({ whatsAppNumber: response.phoneNumber ?? null });
+      } else {
+        set({ whatsAppNumber: null });
+      }
+    } catch (err) {
+      set({ whatsAppNumber: null });
+    }
+  },
+
+  openWhatsApp: () => {
+    const { whatsAppNumber } = get();
+    if (whatsAppNumber) {
+      window.open(`https://wa.me/${whatsAppNumber}`, "_blank");
+    }
+  },
     try {
       const [tab] = await browser.tabs.query({
         active: true,

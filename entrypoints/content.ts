@@ -6,6 +6,21 @@ import {
 } from "@/lib/logger";
 import { highlight1stAnd2ndDegreeConnections } from "./popup/linkedin-content";
 
+function getWhatsAppNumber(): { success: boolean; phoneNumber?: string } {
+  try {
+    const link = document.querySelector<HTMLAnchorElement>("a.W7Nbnf");
+    if (!link || !link.href) {
+      return { success: false };
+    }
+    const url = new URL(link.href);
+    const parts = url.pathname.split("/");
+    const id = parts[parts.length - 1];
+    return { success: true, phoneNumber: id };
+  } catch (err) {
+    return { success: false };
+  }
+}
+
 function trackProfile() {
   linkedInLogger.debug("trackProfile");
   let fullName = document.querySelector<HTMLElement>("a > h1");
@@ -223,6 +238,9 @@ export default defineContentScript({
           break;
         case "degree_highlight_status":
           sendResponse({ isActive: false });
+          break;
+        case "get_whatsapp_number":
+          sendResponse(getWhatsAppNumber());
           break;
         case "track_profile_new_connection":
         case "track_profile_dtm":
