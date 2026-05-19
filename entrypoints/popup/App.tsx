@@ -19,17 +19,20 @@ export function App() {
     return <p className="p-4 text-muted-foreground">Loading...</p>;
   }
   const isLinkedIn = currentUrl.includes("linkedin.com");
-  if (isLinkedIn) {
+  const isGoogleContacts = currentUrl.includes("contacts.google.com");
+  
+  if (isLinkedIn || isGoogleContacts) {
     return (
       <Card className="w-[300px] border-0 shadow-none">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-            LinkedIn++
+             {isLinkedIn ? "LinkedIn++" : "Contacts++"}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <DegreeHighlighter />
-          <TrackProfile />
+          {isLinkedIn && <DegreeHighlighter />}
+          {isLinkedIn && <TrackProfile />}
+          {isGoogleContacts && <DegreeHighlighter />}
         </CardContent>
       </Card>
     );
