@@ -18,60 +18,52 @@ function highlightConnections(): number {
       "Running highlighting logic",
     );
 
-    // Look for any liker element, even if modal is not strictly #dialog-header
-    const peopleWhoReacted = document.querySelectorAll(
-      "a[data-view-name='view-likers']",
+    // Structural approach: Find all 'a' tags which have a 'p' descendant containing '•'
+    // This is robust against dynamic class name changes.
+    const potentialLikers = Array.from(document.querySelectorAll("a")).filter(
+      (a) => a.querySelector("p")?.innerText.includes("•"),
     );
 
-    if (!peopleWhoReacted.length) {
+    if (!potentialLikers.length) {
       linkedInDegreeHighlightingLogger.debug(
         "[contentScript] highlightConnections",
-        "No peopleWhoReacted elements found",
+        "No liker elements found structurally",
       );
       return 0;
     }
 
     linkedInDegreeHighlightingLogger.debug(
       "[contentScript] highlightConnections",
-      `Found ${peopleWhoReacted.length} people`,
+      `Found ${potentialLikers.length} potential likers`,
     );
 
     let highlightedCount = 0;
 
-    peopleWhoReacted.forEach((person) => {
+    potentialLikers.forEach((anchor) => {
       try {
-        // LinkedIn uses specific internal containers for text; target them directly
-        const metadataContainer = person.querySelector("._77e1d0b9._5bee12f6._62238051._5ffdfd5b._35ad0440.fc9fd121._8bcefdb6");
-        const text = metadataContainer?.innerText ?? (person as HTMLElement).innerText;
-
-        linkedInDegreeHighlightingLogger.debug("[contentScript] person text", text);
+        const pElement = anchor.querySelector("p");
+        const text = pElement?.innerText ?? "";
         
-        // More robust matching: Look for "1st" or "2nd" followed by "degree"
+        // Match 1st or 2nd degree
         const match = text.match(/(1st|2nd) degree/);
         if (!match) return;
 
         const connectionDegree = match[1] as "1st" | "2nd";
-        const anchor = person as HTMLAnchorElement;
 
-        // Force Visual Highlighting using CSS priority
+        // Force Visual Highlighting
         const color = connectionDegree === "1st" ? "#0077b6" : "#aab600";
         anchor.style.setProperty("border", `5px solid ${color}`, "important");
         anchor.style.setProperty("box-sizing", "border-box", "important");
         highlightedCount++;
 
-        // Add custom identifier
         anchor.setAttribute("data-highlighted", "true");
-        // Click Behavior Override
+        
         if (anchor.getAttribute("data-custom-click") !== "true") {
           anchor.setAttribute("data-custom-click", "true");
           anchor.setAttribute("target", "_blank");
-          anchor.addEventListener("click", (e) => {
-            e.stopPropagation();
-          });
+          anchor.addEventListener("click", (e) => e.stopPropagation());
         }
-      } catch (errInLoop) {
-        // Suppress individual errors
-      }
+      } catch (errInLoop) {}
     });
 
     return highlightedCount;
@@ -152,13 +144,13 @@ export function highlight1stAnd2ndDegreeConnections(
           "[contentScript] Starting Discovery Observer",
         );
         discoveryObserver = new MutationObserver((mutations) => {
-          // Look for added liker elements specifically
+          // Look for added elements that might be likers (structural check)
           const hasLikers = Array.from(mutations).some((m) =>
             Array.from(m.addedNodes).some(
               (node) =>
                 node instanceof Element &&
-                (node.matches("a[data-view-name='view-likers']") ||
-                  node.querySelector("a[data-view-name='view-likers']")),
+                (node.querySelector("p")?.innerText.includes("•") ||
+                  (node.tagName === "A" && node.querySelector("p")?.innerText.includes("•"))),
             ),
           );
 
