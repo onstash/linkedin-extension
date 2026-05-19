@@ -122,7 +122,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
       });
 
       set({
-        isHighlighting: response?.isActive ?? false,
+        highlightState: response?.isActive ? HIGHLIGHT_STATES.ACTIVE : HIGHLIGHT_STATES.IDLE,
         highlightStatus: response?.isActive ? "Highlighting active" : "Ready",
       });
     } catch {
@@ -134,11 +134,7 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
   toggleHighlightingV2: async () => {
     const { highlightState } = get();
     const isHighlighting = highlightState !== HIGHLIGHT_STATES.IDLE;
-    linkedInDegreeHighlightingLogger.debug("toggleHighlighting", {
-      isHighlighting,
-      highlightState,
-    });
-
+    
     try {
       const [tab] = await browser.tabs.query({
         active: true,
@@ -206,18 +202,10 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
 
       set({ trackProfileError: null });
       const action = `track_profile_${actionType}`;
-      linkedInLogger.debug("trackProfile", {
-        actionType,
-        action,
-      });
       const response = (await browser.tabs.sendMessage(tab.id, {
         action,
       })) as TrackProfileResult;
-      linkedInLogger.debug("trackProfile", {
-        actionType,
-        action,
-        response,
-      });
+      
       if (response?.success) {
         set({ trackProfileStatus: `Profile tracked - ${actionType}` });
         const formAction = getFormAction(actionType);
@@ -268,4 +256,65 @@ export const useExtensionStore = create<ExtensionState>((set, get) => ({
 
   // Track bookmark
   trackBookmark: async () => {
+    try {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (!tab?.id) {
+        set({ trackBookmarkStatus: "No active tab found" });
+        return;
+      }
+
+      set({ trackBookmarkError: null });
+      const action = "track_bookmark";
+      const response = (await browser.tabs.sendMessage(tab.id, {
+        action,
+      })) as TrackBookmarkResult | TrackBookmarkResultTwitter;
+      bookmarks2ActionLogger.debug("trackBookmark", { response });
+
+      if (response?.success) {
+        if (response?.data) {
+          set({ trackBookmarkStatus: `Bookmark tracked` });
+          if (
+            "tweetsMap" in response?.data &&
+            Object.keys(response?.data?.tweetsMap).length > 0
+          ) {
+            if (
+              confirm(
+                `Do you want to track tweets from ${Object.keys(response?.data?.tweetsMap).join(" & ")} accounts?`,
+              )
+            ) {
+              window.open(
+                `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
+                "_blank",
+              );
+            }
+            return;
+          }
+          window.open(
+            `https://app.youform.com/forms/f6gffax5?url=${response.data.url}&caption=${response.data.caption}`,
+            "_blank",
+          );
+        } else {
+          set({ trackBookmarkStatus: `Bookmark tracked` });
+        }
+      } else {
+        const errorMessage = `Error communicating with page: ${response.issues.map((issue) => issue.message).join(", ")}`;
+        alert(errorMessage);
+        set({
+          trackBookmarkStatus: errorMessage,
+          trackBookmarkError: new Error(errorMessage),
+        });
+      }
+    } catch (err) {
+      const error = err as Error;
+      bookmarks2ActionLogger.error("trackBookmark", error);
+      set({
+        trackBookmarkStatus: `Error communicating with page: ${error.message}`,
+        trackBookmarkError: error,
+      });
+    }
+  },
 }));
