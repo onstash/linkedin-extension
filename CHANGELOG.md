@@ -1,12 +1,12 @@
 # linkedin-extension
 
-## 0.5.7
+## 0.5.8
 
 ### Patch Changes
 
-- 9cf1520: Refactor scraper to use structural anchors (finding <a> tags with <p> containing '•'), removing dependency on brittle obfuscated CSS classes.
+- 02487b8: Fix regex to match degree labels ("1st" or "2nd") correctly as LinkedIn changed the format to exclude the word "degree".
 
-## 0.5.6
+## 0.5.7
 
 ## 0.5.3
 
