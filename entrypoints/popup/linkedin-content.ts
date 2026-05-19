@@ -44,6 +44,8 @@ function highlightConnections(): number {
         const pElement = anchor.querySelector("p");
         const text = pElement?.innerText ?? "";
         
+        linkedInDegreeHighlightingLogger.debug("[contentScript] person text content", text);
+
         // Match 1st or 2nd degree
         const match = text.match(/(1st|2nd) degree/);
         if (!match) return;
