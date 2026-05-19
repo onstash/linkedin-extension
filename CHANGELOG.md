@@ -1,12 +1,12 @@
 # linkedin-extension
 
-## 0.5.6
+## 0.5.7
 
 ### Patch Changes
 
-- f5897f0: Fix LinkedIn highlighting: enhance discovery observer to specifically trigger on liker node insertion.
+- 9cf1520: Refactor scraper to use structural anchors (finding <a> tags with <p> containing '•'), removing dependency on brittle obfuscated CSS classes.
 
-## 0.5.5
+## 0.5.6
 
 ## 0.5.3
 
