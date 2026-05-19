@@ -1,12 +1,12 @@
 # linkedin-extension
 
-## 0.5.8
+## 0.5.9
 
 ### Patch Changes
 
-- 02487b8: Fix regex to match degree labels ("1st" or "2nd") correctly as LinkedIn changed the format to exclude the word "degree".
+- 5b8eddf, 6b21b43: Decouple WhatsApp messenger UI into its own component and restrict its rendering to Google Contacts page. 
 
-## 0.5.7
+## 0.5.8
 
 ## 0.5.3
 
